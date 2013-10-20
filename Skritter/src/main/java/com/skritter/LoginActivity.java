@@ -1,18 +1,25 @@
 package com.skritter;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
-import android.app.Activity;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
-public class LoginActivity extends FragmentActivity {
+public class LoginActivity extends FragmentActivity implements LoginTaskFragment.TaskCallbacks{
+
+    private LoginTaskFragment taskFragment;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,18 +37,49 @@ public class LoginActivity extends FragmentActivity {
         password.setTypeface(Typeface.DEFAULT);
         password.setTransformationMethod(new PasswordTransformationMethod());
 
+        // Android Activity lifecycle notes, because I'm a noob
         //onCreate();
         //onStart();
         //onResume(); - Now Running
         //onPause(); -> onResume();
         //onStop();  -> onRestart(); -> onStart() -> onRestoreInstanceState();
         //onDestroy();
+
+
+        // Restore saved state using the code pattern below
+        if (savedInstanceState != null) {
+            //savedInstanceState.get("someKey");
+        }
+
+        FragmentManager fm = getSupportFragmentManager();
+        taskFragment = (LoginTaskFragment) fm.findFragmentByTag("task");
+
+        // If the Fragment is non-null, then it is currently being
+        // retained across a configuration change.
+        if (taskFragment == null) {
+            taskFragment = new LoginTaskFragment();
+            fm.beginTransaction().add(taskFragment, "task").commit();
+        }
+
+        if (taskFragment.isRunning()) {
+            initializeProgressDialog();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         // Store shit about this particular activity instance here
+        //outState.putString("key", "value");
     }
 
     public void login(View view) throws Exception {
@@ -49,11 +87,42 @@ public class LoginActivity extends FragmentActivity {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
-        // Start the async task
-//        new LoginUserAsyncTask().execute("Username", "Password");
+        taskFragment.start("Username", "Password");
+    }
+
+    private void initializeProgressDialog() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            progressDialog = new ProgressDialog(this);
+        } else {
+            progressDialog = new ProgressDialog(this, AlertDialog.THEME_HOLO_LIGHT);
+        }
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Logging in...");
+        progressDialog.show();
+    }
+
+    @Override
+    public void onPreExecute() {
+        initializeProgressDialog();
+    }
+
+    @Override
+    public void onCancelled() {
+        Toast.makeText(this, "onCancelled", Toast.LENGTH_SHORT).show();
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
+    }
+
+    @Override
+    public void onPostExecute() {
+        Toast.makeText(this, "postExecute", Toast.LENGTH_SHORT).show();
+
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
 
         Intent intent = new Intent(this, DrawingActivity.class);
         startActivity(intent);
-
     }
 }
