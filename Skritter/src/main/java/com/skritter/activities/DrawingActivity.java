@@ -1,4 +1,4 @@
-package com.skritter;
+package com.skritter.activities;
 
 import android.os.Bundle;
 import android.annotation.SuppressLint;
@@ -7,6 +7,9 @@ import android.graphics.Color;
 import android.view.View;
 import android.view.Window;
 import android.webkit.WebView;
+
+import com.skritter.views.PromptCanvas;
+import com.skritter.R;
 
 public class DrawingActivity extends Activity {
     private PromptCanvas canvas;

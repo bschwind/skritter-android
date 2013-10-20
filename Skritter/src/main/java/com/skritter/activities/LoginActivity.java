@@ -1,4 +1,4 @@
-package com.skritter;
+package com.skritter.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -16,7 +16,10 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class LoginActivity extends FragmentActivity implements LoginTaskFragment.TaskCallbacks{
+import com.skritter.taskFragments.LoginTaskFragment;
+import com.skritter.R;
+
+public class LoginActivity extends FragmentActivity implements LoginTaskFragment.TaskCallbacks {
 
     private LoginTaskFragment taskFragment;
     private ProgressDialog progressDialog;

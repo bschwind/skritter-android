@@ -1,4 +1,4 @@
-package com.skritter;
+package com.skritter.taskFragments;
 
 import android.app.Activity;
 import android.os.AsyncTask;
@@ -15,7 +15,7 @@ public class LoginTaskFragment extends Fragment {
      * Callback interface through which the fragment can report the task's
      * progress and results back to the Activity.
      */
-    static interface TaskCallbacks {
+    public static interface TaskCallbacks {
         public void onPreExecute();
         public void onCancelled();
         public void onPostExecute();
