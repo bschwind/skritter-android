@@ -8,6 +8,8 @@ Skritter Android is a native implementation of Skritter
 - Android SDK
 - Environment variable "ANDROID_HOME" is set to Android's root sdk directory (example: /Users/user1/Projects/android-lib/sdk/)
 - Android SDK Build-tools: I believe revision 17 is what's needed, but installing all of them is a catch-all way to ensure you have what you need
+- Android Support Repository (use Android SDK Manager to install)
+- Android Support Library (use Android SDK Manager to install)
 - Gradle (optional)
 
 **Command Line**
