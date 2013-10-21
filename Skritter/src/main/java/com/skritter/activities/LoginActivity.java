@@ -90,7 +90,10 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
-        taskFragment.start("Username", "Password");
+        String username = ((EditText) findViewById(R.id.username)).getText().toString();
+        String password = ((EditText) findViewById(R.id.password)).getText().toString();
+
+        taskFragment.start(username, password);
     }
 
     private void initializeProgressDialog() {
@@ -99,6 +102,7 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
         } else {
             progressDialog = new ProgressDialog(this, AlertDialog.THEME_HOLO_LIGHT);
         }
+        progressDialog.setCancelable(false);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Logging in...");
         progressDialog.show();
@@ -111,21 +115,22 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
 
     @Override
     public void onCancelled() {
-        Toast.makeText(this, "onCancelled", Toast.LENGTH_SHORT).show();
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
     }
 
     @Override
-    public void onPostExecute() {
-        Toast.makeText(this, "postExecute", Toast.LENGTH_SHORT).show();
-
+    public void onPostExecute(Boolean loggedIn) {
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
 
-        Intent intent = new Intent(this, DrawingActivity.class);
-        startActivity(intent);
+        if (loggedIn) {
+            Intent intent = new Intent(this, DrawingActivity.class);
+            startActivity(intent);
+        } else {
+            // Invalid username toast
+        }
     }
 }

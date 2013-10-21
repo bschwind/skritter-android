@@ -1,9 +1,35 @@
 package com.skritter.taskFragments;
 
 import android.app.Activity;
+import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
+
+import com.skritter.SkritterAPI;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This Fragment manages a single background task and retains itself across
@@ -18,7 +44,7 @@ public class LoginTaskFragment extends Fragment {
     public static interface TaskCallbacks {
         public void onPreExecute();
         public void onCancelled();
-        public void onPostExecute();
+        public void onPostExecute(Boolean loggedIn);
     }
 
     private TaskCallbacks mCallbacks;
@@ -103,22 +129,14 @@ public class LoginTaskFragment extends Fragment {
 
         @Override
         protected Boolean doInBackground(String... params) {
-            if(params != null && params.length >= 1){
-                String username = params[0];
-                String password = params[1];
-
-                try {
-                    Thread.sleep(5000);
-                    // HTTP Request to the Skritter API
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                // if everything is ok return true
-                return true;
+            if (params == null || params.length != 2) {
+                return false;
             }
 
-            return false;
+            String username = params[0];
+            String password = params[1];
+
+            return SkritterAPI.login(username, password);
         }
 
         @Override
@@ -133,7 +151,7 @@ public class LoginTaskFragment extends Fragment {
         protected void onPostExecute(Boolean result) {
             super.onPostExecute(result);
             // Proxy the call to the Activity
-            mCallbacks.onPostExecute();
+            mCallbacks.onPostExecute(result);
             running = false;
         }
     }
