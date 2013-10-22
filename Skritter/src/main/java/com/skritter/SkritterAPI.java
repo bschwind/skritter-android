@@ -32,7 +32,7 @@ public class SkritterAPI {
 
         String url = "https://www.skritter.com/api/v0/oauth2/token";
 
-        HttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
+        AndroidHttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
         HttpPost httpPost = new HttpPost(url);
 
         List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>();
@@ -63,6 +63,8 @@ public class SkritterAPI {
         } catch (IOException io) {
             io.printStackTrace();
             return false;
+        } finally {
+            httpClient.close();
         }
 
         String userID;

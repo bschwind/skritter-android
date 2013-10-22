@@ -23,6 +23,8 @@ public class NetworkUtils {
                 sb.append(line).append("\n");
                 line = br.readLine();
             }
+
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
