@@ -1,24 +1,11 @@
 package com.skritter.activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Typeface;
-import android.os.Build;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.text.method.PasswordTransformationMethod;
-import android.view.View;
-import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
-import android.widget.Toast;
 
-import com.skritter.taskFragments.LoginTaskFragment;
-import com.skritter.R;
+import com.skritter.SkritterApplication;
 
 public class StartupActivity extends Activity {
 
@@ -38,6 +25,13 @@ public class StartupActivity extends Activity {
     }
 
     private boolean userIsAuthenticated() {
-        return false;
+        SharedPreferences settings = getSharedPreferences(SkritterApplication.SKRITTER_SHARED_PREFERENCES, MODE_PRIVATE);
+
+        String userID = settings.getString(SkritterApplication.PreferenceKeys.USER_ID, "");
+        int secondsBeforeExpiring = settings.getInt(SkritterApplication.PreferenceKeys.SECONDS_BEFORE_EXPIRING, 0);
+        String accessToken = settings.getString(SkritterApplication.PreferenceKeys.ACCESS_TOKEN, "");
+        String refreshToken = settings.getString(SkritterApplication.PreferenceKeys.REFRESH_TOKEN, "");
+
+        return !"".equals(accessToken);
     }
 }

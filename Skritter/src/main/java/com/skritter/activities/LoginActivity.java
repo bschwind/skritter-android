@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,8 +15,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.Toast;
 
+import com.skritter.SkritterAPI;
+import com.skritter.SkritterApplication;
 import com.skritter.taskFragments.LoginTaskFragment;
 import com.skritter.R;
 
@@ -121,16 +123,30 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
     }
 
     @Override
-    public void onPostExecute(Boolean loggedIn) {
+    public void onPostExecute(SkritterAPI.LoginStatus loginStatus) {
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
 
-        if (loggedIn) {
+        if (loginStatus.isLoggedIn()) {
+            storeLoginInfo(loginStatus);
+
             Intent intent = new Intent(this, DrawingActivity.class);
             startActivity(intent);
         } else {
             // Invalid username toast
         }
+    }
+
+    private void storeLoginInfo(SkritterAPI.LoginStatus loginStatus) {
+        SharedPreferences settings = getSharedPreferences(SkritterApplication.SKRITTER_SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+
+        editor.putString(SkritterApplication.PreferenceKeys.USER_ID, loginStatus.getUserID());
+        editor.putInt(SkritterApplication.PreferenceKeys.SECONDS_BEFORE_EXPIRING, loginStatus.getSecondsBeforeExpiring());
+        editor.putString(SkritterApplication.PreferenceKeys.REFRESH_TOKEN, loginStatus.getRefreshToken());
+        editor.putString(SkritterApplication.PreferenceKeys.ACCESS_TOKEN, loginStatus.getAccessToken());
+
+        editor.commit();
     }
 }

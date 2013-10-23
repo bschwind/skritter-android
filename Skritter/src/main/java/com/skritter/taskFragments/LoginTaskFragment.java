@@ -1,35 +1,11 @@
 package com.skritter.taskFragments;
 
 import android.app.Activity;
-import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Base64;
 
 import com.skritter.SkritterAPI;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This Fragment manages a single background task and retains itself across
@@ -44,7 +20,7 @@ public class LoginTaskFragment extends Fragment {
     public static interface TaskCallbacks {
         public void onPreExecute();
         public void onCancelled();
-        public void onPostExecute(Boolean loggedIn);
+        public void onPostExecute(SkritterAPI.LoginStatus loggedIn);
     }
 
     private TaskCallbacks mCallbacks;
@@ -118,7 +94,7 @@ public class LoginTaskFragment extends Fragment {
     /**
      * The task to log in the user
      */
-    private class LoginTask extends AsyncTask<String, Void, Boolean> {
+    private class LoginTask extends AsyncTask<String, Void, SkritterAPI.LoginStatus> {
 
         @Override
         protected void onPreExecute() {
@@ -128,9 +104,10 @@ public class LoginTaskFragment extends Fragment {
         }
 
         @Override
-        protected Boolean doInBackground(String... params) {
+        protected SkritterAPI.LoginStatus doInBackground(String... params) {
             if (params == null || params.length != 2) {
-                return false;
+                SkritterAPI.LoginStatus loginStatus = new SkritterAPI.LoginStatus();
+                loginStatus.setLoggedIn(false);
             }
 
             String username = params[0];
@@ -148,7 +125,7 @@ public class LoginTaskFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(Boolean result) {
+        protected void onPostExecute(SkritterAPI.LoginStatus result) {
             super.onPostExecute(result);
             // Proxy the call to the Activity
             mCallbacks.onPostExecute(result);
