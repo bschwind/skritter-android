@@ -108,6 +108,7 @@ public class LoginTaskFragment extends Fragment {
             if (params == null || params.length != 2) {
                 SkritterAPI.LoginStatus loginStatus = new SkritterAPI.LoginStatus();
                 loginStatus.setLoggedIn(false);
+                return loginStatus;
             }
 
             String username = params[0];
