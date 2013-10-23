@@ -16,12 +16,19 @@
         android:theme="@style/AppTheme"
         android:name=".SkritterApplication">
         <activity
-            android:name=".activities.LoginActivity"
-            android:label="@string/app_name" >
+            android:name=".activities.StartupActivity"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".activities.LoginActivity"
+            android:label="@string/app_name" >
         </activity>
 
         <activity
