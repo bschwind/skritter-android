@@ -180,7 +180,7 @@ public class PromptCanvas extends View {
         strokePaint.setStyle(Paint.Style.STROKE);
         strokePaint.setStrokeJoin(Paint.Join.ROUND);
         strokePaint.setStrokeCap(Paint.Cap.ROUND);
-        strokePaint.setStrokeWidth(14);
+        strokePaint.setStrokeWidth(10);
 
         gridPaint = new Paint();
         gridPaint.setAntiAlias(true);
