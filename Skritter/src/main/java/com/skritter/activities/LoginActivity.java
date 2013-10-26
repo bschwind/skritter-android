@@ -16,8 +16,8 @@ import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
-import com.skritter.SkritterAPI;
 import com.skritter.SkritterApplication;
+import com.skritter.models.LoginStatus;
 import com.skritter.taskFragments.LoginTaskFragment;
 import com.skritter.R;
 
@@ -123,7 +123,7 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
     }
 
     @Override
-    public void onPostExecute(SkritterAPI.LoginStatus loginStatus) {
+    public void onPostExecute(LoginStatus loginStatus) {
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
@@ -138,7 +138,7 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
         }
     }
 
-    private void storeLoginInfo(SkritterAPI.LoginStatus loginStatus) {
+    private void storeLoginInfo(LoginStatus loginStatus) {
         SharedPreferences settings = getSharedPreferences(SkritterApplication.SKRITTER_SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
 

@@ -3,12 +3,19 @@ package com.skritter;
 import android.net.http.AndroidHttpClient;
 import android.util.Base64;
 
-import org.apache.http.HttpResponse;
+import com.skritter.models.LoginStatus;
+import com.skritter.models.StudyItem;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,54 +30,6 @@ import java.util.List;
 public class SkritterAPI {
     private static String apiClientID = "bschwindapiclient";
     private static String apiClientSecret = "c7e7251c01b830b8ed87ea4bb39fdd";
-
-    public static class LoginStatus {
-        private boolean loggedIn;
-        private String userID;
-        private int secondsBeforeExpiring;
-        private String refreshToken;
-        private String accessToken;
-
-        public boolean isLoggedIn() {
-            return loggedIn;
-        }
-
-        public void setLoggedIn(boolean loggedIn) {
-            this.loggedIn = loggedIn;
-        }
-
-        public String getUserID() {
-            return userID;
-        }
-
-        public void setUserID(String userID) {
-            this.userID = userID;
-        }
-
-        public int getSecondsBeforeExpiring() {
-            return secondsBeforeExpiring;
-        }
-
-        public void setSecondsBeforeExpiring(int secondsBeforeExpiring) {
-            this.secondsBeforeExpiring = secondsBeforeExpiring;
-        }
-
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-
-        public void setRefreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-        }
-
-        public String getAccessToken() {
-            return accessToken;
-        }
-
-        public void setAccessToken(String accessToken) {
-            this.accessToken = accessToken;
-        }
-    }
 
     public static LoginStatus login(String username, String password) {
         LoginStatus loginStatus = new LoginStatus();
@@ -104,10 +63,11 @@ public class SkritterAPI {
         }
 
         httpPost.addHeader("AUTHORIZATION", credentials);
-        HttpResponse response;
+        String responseBody;
 
         try {
-            response = httpClient.execute(httpPost);
+            ResponseHandler<String> responseHandler=new BasicResponseHandler();
+            responseBody = httpClient.execute(httpPost, responseHandler);
         } catch (ClientProtocolException cpe) {
             cpe.printStackTrace();
             loginStatus.setLoggedIn(false);
@@ -120,27 +80,95 @@ public class SkritterAPI {
             httpClient.close();
         }
 
-        JSONObject jsonObject = NetworkUtils.getJsonObjectFromHTTPResponse(response);
+        JSONObject jsonObject = NetworkUtils.getJsonObjectFromHTTPResponseBody(responseBody);
+
+        String statusCode = "";
 
         if (jsonObject != null) {
-            try {
-                loginStatus.setUserID(jsonObject.getString("user_id"));
-                loginStatus.setSecondsBeforeExpiring(jsonObject.getInt("expires_in"));
-                loginStatus.setRefreshToken(jsonObject.getString("refresh_token"));
-                loginStatus.setAccessToken(jsonObject.getString("access_token"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-                loginStatus.setLoggedIn(false);
-                return loginStatus;
-            }
+            statusCode = jsonObject.optString("statusCode");
         }
 
-        if ("OK".equals(response.getStatusLine().getReasonPhrase())) {
+        if ("200".equals(statusCode)) {
+            loginStatus.loadFromJSONObject(jsonObject);
             loginStatus.setLoggedIn(true);
             return loginStatus;
         } else {
             loginStatus.setLoggedIn(false);
             return loginStatus;
+        }
+    }
+
+    public static void fetchItems(String accessToken) {
+
+        List<StudyItem> studyItems = new ArrayList<StudyItem>();
+        String cursor = fetchStudyItemsAndAppendToList(studyItems, accessToken, null);
+
+        while (cursor != null) {
+            cursor = fetchStudyItemsAndAppendToList(studyItems, accessToken, cursor);
+        }
+
+        System.out.println(studyItems);
+    }
+
+    private static String fetchStudyItemsAndAppendToList(List<StudyItem> studyItems, String accessToken, String cursor) {
+        String url = "http://www.skritter.com/api/v0/items?";
+
+        List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>();
+        nameValuePair.add(new BasicNameValuePair("sort", "changed"));
+        nameValuePair.add(new BasicNameValuePair("parts", "rune"));
+        nameValuePair.add(new BasicNameValuePair("bearer_token", accessToken));
+        nameValuePair.add(new BasicNameValuePair("gzip", "false"));
+        if (cursor != null) {
+            nameValuePair.add(new BasicNameValuePair("cursor", cursor));
+        }
+
+        String paramString = URLEncodedUtils.format(nameValuePair, "utf-8");
+        url += paramString;
+
+        AndroidHttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
+        HttpGet httpGet = new HttpGet(url);
+
+        String responseBody = "";
+
+        try {
+            ResponseHandler<String> responseHandler=new BasicResponseHandler();
+            responseBody = httpClient.execute(httpGet, responseHandler);
+        } catch (ClientProtocolException cpe) {
+            cpe.printStackTrace();
+            return null;
+        } catch (IOException io) {
+            io.printStackTrace();
+            return null;
+        } finally {
+            httpClient.close();
+        }
+
+        JSONObject jsonObject = NetworkUtils.getJsonObjectFromHTTPResponseBody(responseBody);
+
+        String statusCode = "";
+
+        if (jsonObject != null) {
+            statusCode = jsonObject.optString("statusCode");
+        }
+
+        if ("200".equals(statusCode)) {
+            JSONArray studyItemJSONArray = jsonObject.optJSONArray("Items");
+
+            for (int i = 0; i < studyItemJSONArray.length(); i++) {
+                JSONObject studyItemJSONObject = studyItemJSONArray.optJSONObject(i);
+                StudyItem item = new StudyItem();
+                item.loadFromJSONObject(studyItemJSONObject);
+
+                studyItems.add(item);
+            }
+
+            if ("".equals(jsonObject.optString("cursor"))) {
+                return null;
+            }
+
+            return jsonObject.optString("cursor");
+        } else {
+            return null;
         }
     }
 }

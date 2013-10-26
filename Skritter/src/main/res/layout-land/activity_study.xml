@@ -4,19 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:orientation="vertical">
-
-    <WebView
-        android:id="@+id/web"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="3" />
+    android:orientation="horizontal">
 
     <com.skritter.views.PromptCanvas
         android:id="@+id/canvas"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="0.4"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_height="fill_parent"/>
 
 </LinearLayout>

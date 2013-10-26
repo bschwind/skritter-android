@@ -12,28 +12,10 @@ import java.io.InputStreamReader;
  * Created by bschwind on 10/20/13.
  */
 public class NetworkUtils {
-    public static JSONObject getJsonObjectFromHTTPResponse(HttpResponse response) {
-        BufferedReader br;
-        StringBuilder sb = new StringBuilder();
-        try {
-            br = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line).append("\n");
-                line = br.readLine();
-            }
-
-            br.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-
+    public static JSONObject getJsonObjectFromHTTPResponseBody(String responseBody) {
         JSONObject jsonObject;
         try {
-            jsonObject = new JSONObject(sb.toString());
+            jsonObject = new JSONObject(responseBody);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;

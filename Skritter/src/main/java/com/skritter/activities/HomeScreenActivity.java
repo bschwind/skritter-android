@@ -10,6 +10,7 @@ import android.view.Window;
 import android.widget.TextView;
 
 import com.skritter.R;
+import com.skritter.SkritterAPI;
 import com.skritter.SkritterApplication;
 
 public class HomeScreenActivity extends FragmentActivity {
@@ -36,12 +37,12 @@ public class HomeScreenActivity extends FragmentActivity {
     }
 
     public void onClickStudy(View view) throws Exception {
-        Intent intent = new Intent(this, DrawingActivity.class);
+        Intent intent = new Intent(this, StudyActivity.class);
         startActivity(intent);
     }
 
     public void onClickAdvancedStudy(View view) throws Exception {
-        Intent intent = new Intent(this, DrawingActivity.class);
+        Intent intent = new Intent(this, StudyActivity.class);
         startActivity(intent);
     }
 
