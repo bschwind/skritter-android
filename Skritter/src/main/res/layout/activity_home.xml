@@ -1,0 +1,95 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context=".HomeScreenActivity"
+    android:orientation="vertical">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="3"
+        tools:context=".LoginActivity"
+        android:orientation="vertical">
+
+        <TextView android:id="@+id/welcomeMessage"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:text="@string/home_welcome_message"
+            android:gravity="center_horizontal"
+            android:textSize="25sp"
+            android:layout_marginTop="25dp"/>
+        <Button android:id="@+id/studyButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/study"
+            android:onClick="onClickStudy"
+            android:layout_marginTop="12dp"
+            android:textSize="30sp"/>
+        <Button android:id="@+id/advancedStudyButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/advancedStudy"
+            android:onClick="onClickAdvancedStudy"
+            android:layout_marginTop="12dp"
+            android:textSize="25sp"/>
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="1"
+        tools:context=".LoginActivity"
+        android:orientation="horizontal">
+
+        <Button android:id="@+id/progressButton"
+            android:layout_width="fill_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/progress"
+            android:onClick="onClickProgress"
+            android:textSize="20sp"
+            android:layout_gravity="center_vertical"/>
+        <Button android:id="@+id/listsButton"
+            android:layout_width="fill_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/lists"
+            android:onClick="onClickLists"
+            android:textSize="20sp"
+            android:layout_gravity="center_vertical"/>
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="fill_parent"
+        android:layout_height="0px"
+        android:layout_weight="1"
+        tools:context=".LoginActivity"
+        android:orientation="horizontal">
+
+        <Button android:id="@+id/settingsButton"
+            android:layout_width="fill_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/settings"
+            android:onClick="onClickSettings"
+            android:textSize="20sp"
+            android:layout_gravity="center_vertical"/>
+        <Button android:id="@+id/helpButton"
+            android:layout_width="fill_parent"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/help"
+            android:onClick="onClickHelp"
+            android:textSize="20sp"
+            android:layout_gravity="center_vertical"/>
+    </LinearLayout>
+
+</LinearLayout>

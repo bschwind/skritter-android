@@ -32,12 +32,15 @@
         </activity>
 
         <activity
+            android:name=".activities.HomeScreenActivity"
+            android:label="@string/app_name"
+            android:parentActivityName="com.skritter.LoginActivity" >
+        </activity>
+
+        <activity
             android:name=".activities.DrawingActivity"
             android:label="@string/app_name"
             android:parentActivityName="com.skritter.LoginActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.skritter.LoginActivity" />
         </activity>
     </application>
 

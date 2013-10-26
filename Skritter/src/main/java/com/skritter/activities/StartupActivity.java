@@ -15,7 +15,7 @@ public class StartupActivity extends Activity {
 
         Intent intent;
         if (userIsAuthenticated()) {
-            intent = new Intent(this, DrawingActivity.class);
+            intent = new Intent(this, HomeScreenActivity.class);
         } else {
             intent = new Intent(this, LoginActivity.class);
         }

@@ -131,7 +131,7 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
         if (loginStatus.isLoggedIn()) {
             storeLoginInfo(loginStatus);
 
-            Intent intent = new Intent(this, DrawingActivity.class);
+            Intent intent = new Intent(this, HomeScreenActivity.class);
             startActivity(intent);
         } else {
             // Invalid username toast
