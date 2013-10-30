@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,9 +9,33 @@
     tools:context=".LoginActivity"
     android:orientation="vertical">
 
-    <TextView android:id="@+id/skritterLabel" android:layout_width="match_parent" android:layout_height="100dp" android:text="@string/app_name" android:gravity="center_horizontal" android:textSize="60sp" android:layout_marginTop="60dp"/>
-    <EditText android:id="@+id/username" android:inputType="text" android:layout_width="match_parent" android:layout_height="48dp" android:hint="@string/username"/>
-    <EditText android:id="@+id/password" android:inputType="textPassword" android:layout_width="match_parent" android:layout_height="48dp" android:hint="@string/password"/>
-    <Button android:id="@+id/loginButton" android:layout_width="match_parent" android:layout_height="60dp" android:text="@string/login" android:onClick="login" android:layout_marginTop="12dp"/>
+    <TextView android:id="@+id/skritterLabel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:gravity="center_horizontal"
+        android:textSize="60sp"/>
 
-</LinearLayout>
+    <EditText android:id="@+id/username"
+        android:inputType="text"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="@string/username"
+        android:layout_below="@+id/skritterLabel"/>
+
+    <EditText android:id="@+id/password"
+        android:inputType="textPassword"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="@string/password"
+        android:layout_below="@+id/username"/>
+
+    <Button android:id="@+id/loginButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/login"
+        android:onClick="login"
+        android:layout_marginTop="12dp"
+        android:layout_below="@+id/password"/>
+
+</RelativeLayout>
