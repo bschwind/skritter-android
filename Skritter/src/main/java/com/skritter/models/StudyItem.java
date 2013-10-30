@@ -4,10 +4,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class StudyItem extends SkritterObject {
+    private int databaseID;
     private String id;
-    private String part;
+    private String part; // can be rdng,rune,tone, or defn
     private String[] vocabIDs;
-    private String style;
+    private String style; // both, trad, simp
     private long timeStudied;
     private long next;
     private long last;
@@ -20,6 +21,14 @@ public class StudyItem extends SkritterObject {
     private long changed;
     private boolean previousSuccess;
     private long previousInterval;
+
+    public int getDatabaseID() {
+        return databaseID;
+    }
+
+    public void setDatabaseID(int databaseID) {
+        this.databaseID = databaseID;
+    }
 
     public String getId() {
         return id;
@@ -155,14 +164,14 @@ public class StudyItem extends SkritterObject {
             try {
                 setId(jsonObject.getString("id"));
                 setPart(jsonObject.getString("part"));
-//                setVocabIDs(jsonObject.getJSONArray("vocabIDs"));
+                setVocabIDs(getStringArrayFromJSONArray(jsonObject.getJSONArray("vocabIds")));
                 setStyle(jsonObject.getString("style"));
                 setTimeStudied(jsonObject.getLong("timeStudied"));
                 setNext(jsonObject.getLong("next"));
                 setLast(jsonObject.optLong("last"));
                 setInterval(jsonObject.optLong("interval"));
-//                setVocabListIDs(jsonObject.getJSONArray("vocabListIDs"));
-//                setSectionIDs(jsonObject.getJSONArray("sectionIDs"));
+                setVocabListIDs(getStringArrayFromJSONArray(jsonObject.getJSONArray("vocabListIds")));
+                setSectionIDs(getStringArrayFromJSONArray(jsonObject.getJSONArray("sectionIds")));
                 setReviews(jsonObject.getInt("reviews"));
                 setSuccesses(jsonObject.getInt("successes"));
                 setCreated(jsonObject.getLong("created"));
