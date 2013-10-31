@@ -51,7 +51,7 @@ public class SkritterDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public static String[] convertCSVToArray(String csv) {
-        if (csv == null) {
+        if (csv == null || "".equals(csv)) {
             return null;
         }
 

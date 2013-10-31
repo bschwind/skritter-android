@@ -1,5 +1,6 @@
 package com.skritter.persistence;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -55,17 +56,19 @@ public abstract class SkritterDatabaseTable<T> {
     public abstract String getTableName();
     public abstract Column[] getColumns();
     public abstract T populateItem(Cursor cursor);
+    public abstract ContentValues populateContentValues(T item);
 
-    public abstract long create(SQLiteDatabase db, T item);
-    public abstract T read(SQLiteDatabase db, long id);
-    public abstract long update(SQLiteDatabase db, T item);
-    public abstract void delete(SQLiteDatabase db, T item);
+    public abstract long create(SkritterDatabaseHelper db, T item);
+    public abstract T read(SkritterDatabaseHelper db, long id);
+    public abstract long update(SkritterDatabaseHelper db, T item);
+    public abstract void delete(SkritterDatabaseHelper db, T item);
 
-    public List<T> getAllItems(SQLiteDatabase db) {
+    public List<T> getAllItems(SkritterDatabaseHelper db) {
         List<T> items = new ArrayList<T>();
         String selectQuery = "SELECT  * FROM " + getTableName();
 
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        SQLiteDatabase sqlDB = db.getReadableDatabase();
+        Cursor cursor = sqlDB.rawQuery(selectQuery, null);
 
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
@@ -76,6 +79,13 @@ public abstract class SkritterDatabaseTable<T> {
         }
 
         return items;
+    }
+
+    public void deleteAllItems(SkritterDatabaseHelper db) {
+        String deleteQuery = "DELETE FROM " + getTableName() + ";";
+        SQLiteDatabase sqlDB = db.getWritableDatabase();
+
+        sqlDB.execSQL(deleteQuery);
     }
 
     public String getCreateStatement() {

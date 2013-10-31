@@ -12,6 +12,7 @@ import com.skritter.models.StudyItem;
 public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
     private static final String ID = "id";
     private static final String STUDY_ITEM_ID = "study_item_id";
+    private static final String PART = "part";
     private static final String VOCAB_IDS = "vocab_ids";
     private static final String STYLE = "style";
     private static final String TIME_STUDIED = "time_studied";
@@ -27,6 +28,12 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
     private static final String PREVIOUS_SUCCESS = "previous_success";
     private static final String PREVIOUS_INTERVAL = "previous_interval";
 
+    private static final StudyItemTable studyItemTable = new StudyItemTable();
+
+    public static StudyItemTable getInstance() {
+        return studyItemTable;
+    }
+
     @Override
     public String getTableName() {
         return "study_item";
@@ -37,6 +44,7 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         return new Column[] {
                 new Column(true, ID, Column.INTEGER_TYPE),
                 new Column(false, STUDY_ITEM_ID, Column.TEXT_TYPE),
+                new Column(false, PART, Column.TEXT_TYPE),
                 new Column(false, VOCAB_IDS, Column.TEXT_TYPE),
                 new Column(false, STYLE, Column.TEXT_TYPE),
                 new Column(false, TIME_STUDIED, Column.INTEGER_TYPE),
@@ -54,34 +62,22 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         };
     }
 
-    public long create(SQLiteDatabase db, StudyItem studyItem) {
-        ContentValues values = new ContentValues();
+    @Override
+    public long create(SkritterDatabaseHelper db, StudyItem studyItem) {
+        ContentValues values = populateContentValues(studyItem);
 
-        values.put(STUDY_ITEM_ID, studyItem.getId());
-        values.put(VOCAB_IDS, SkritterDatabaseHelper.convertArrayToCSV(studyItem.getVocabIDs()));
-        values.put(STYLE, studyItem.getStyle());
-        values.put(TIME_STUDIED, studyItem.getTimeStudied());
-        values.put(NEXT, studyItem.getNext());
-        values.put(LAST, studyItem.getLast());
-        values.put(INTERVAL, studyItem.getInterval());
-        values.put(VOCAB_LIST_IDS, SkritterDatabaseHelper.convertArrayToCSV(studyItem.getVocabListIDs()));
-        values.put(SECTION_IDS, SkritterDatabaseHelper.convertArrayToCSV(studyItem.getSectionIDs()));
-        values.put(REVIEWS, studyItem.getReviews());
-        values.put(SUCCESSES, studyItem.getSuccesses());
-        values.put(CREATED, studyItem.getCreated());
-        values.put(CHANGED, studyItem.getChanged());
-        values.put(PREVIOUS_SUCCESS, studyItem.isPreviousSuccess());
-        values.put(PREVIOUS_INTERVAL, studyItem.getPreviousInterval());
-
-        long studyItemID = db.insert(getTableName(), null, values);
+        SQLiteDatabase sqlDB = db.getWritableDatabase();
+        long studyItemID = sqlDB.insert(getTableName(), null, values);
 
         return studyItemID;
     }
 
-    public StudyItem read(SQLiteDatabase db, long id) {
+    @Override
+    public StudyItem read(SkritterDatabaseHelper db, long id) {
         String selectQuery = "SELECT  * FROM " + getTableName() + " WHERE " + ID + " = " + id;
 
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        SQLiteDatabase sqlDB = db.getReadableDatabase();
+        Cursor cursor = sqlDB.rawQuery(selectQuery, null);
 
         if (cursor != null) {
             cursor.moveToFirst();
@@ -92,11 +88,27 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         return studyItem;
     }
 
+    @Override
+    public long update(SkritterDatabaseHelper db, StudyItem studyItem) {
+        ContentValues values = populateContentValues(studyItem);
+
+        SQLiteDatabase sqlDB = db.getWritableDatabase();
+        return sqlDB.update(getTableName(), values, ID + " = ?", new String[] { String.valueOf(studyItem.getDatabaseID()) });
+    }
+
+    @Override
+    public void delete(SkritterDatabaseHelper db, StudyItem item) {
+        SQLiteDatabase sqlDB = db.getWritableDatabase();
+        sqlDB.delete(getTableName(), ID + " = ?", new String[] { String.valueOf( item.getDatabaseID()) });
+    }
+
+    @Override
     public StudyItem populateItem(Cursor cursor) {
         StudyItem studyItem = new StudyItem();
 
         studyItem.setId(cursor.getString(cursor.getColumnIndex(STUDY_ITEM_ID)));
         studyItem.setVocabIDs(SkritterDatabaseHelper.convertCSVToArray(cursor.getString(cursor.getColumnIndex(VOCAB_IDS))));
+        studyItem.setPart(cursor.getString(cursor.getColumnIndex(PART)));
         studyItem.setStyle(cursor.getString(cursor.getColumnIndex(STYLE)));
         studyItem.setTimeStudied(cursor.getLong(cursor.getColumnIndex(TIME_STUDIED)));
         studyItem.setNext(cursor.getLong(cursor.getColumnIndex(NEXT)));
@@ -114,11 +126,13 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         return studyItem;
     }
 
-    public long update(SQLiteDatabase db, StudyItem studyItem) {
+    @Override
+    public ContentValues populateContentValues(StudyItem studyItem) {
         ContentValues values = new ContentValues();
 
         values.put(STUDY_ITEM_ID, studyItem.getId());
         values.put(VOCAB_IDS, SkritterDatabaseHelper.convertArrayToCSV(studyItem.getVocabIDs()));
+        values.put(PART, studyItem.getPart());
         values.put(STYLE, studyItem.getStyle());
         values.put(TIME_STUDIED, studyItem.getTimeStudied());
         values.put(NEXT, studyItem.getNext());
@@ -133,12 +147,7 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         values.put(PREVIOUS_SUCCESS, studyItem.isPreviousSuccess());
         values.put(PREVIOUS_INTERVAL, studyItem.getPreviousInterval());
 
-        // updating row
-        return db.update(getTableName(), values, ID + " = ?", new String[] { String.valueOf(studyItem.getDatabaseID()) });
-    }
-
-    public void delete(SQLiteDatabase db, StudyItem item) {
-        db.delete(getTableName(), ID + " = ?", new String[] { String.valueOf( item.getDatabaseID()) });
+        return values;
     }
 
 }
