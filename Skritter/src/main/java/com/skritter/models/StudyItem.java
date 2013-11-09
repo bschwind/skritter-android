@@ -24,6 +24,10 @@ public class StudyItem extends SkritterObject {
     private boolean previousSuccess;
     private long previousInterval;
 
+    public StudyItem() {
+        super();
+    }
+
     public StudyItem(JSONObject jsonObject) {
         super(jsonObject);
 

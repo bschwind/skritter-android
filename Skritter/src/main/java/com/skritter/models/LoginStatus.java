@@ -11,6 +11,27 @@ public class LoginStatus extends SkritterObject {
     private String refreshToken;
     private String accessToken;
 
+    public LoginStatus() {
+        super();
+    }
+
+    public LoginStatus(JSONObject jsonObject) {
+        super(jsonObject);
+
+        if (jsonObject != null) {
+            try {
+                setUserID(jsonObject.getString("user_id"));
+                setSecondsBeforeExpiring(jsonObject.getInt("expires_in"));
+                setRefreshToken(jsonObject.getString("refresh_token"));
+                setAccessToken(jsonObject.getString("access_token"));
+                setLoggedIn(true);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                setLoggedIn(false);
+            }
+        }
+    }
+
     public boolean isLoggedIn() {
         return loggedIn;
     }
@@ -49,21 +70,5 @@ public class LoginStatus extends SkritterObject {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
-    }
-
-    @Override
-    public void loadFromJSONObject(JSONObject jsonObject) {
-        if (jsonObject != null) {
-            try {
-                setUserID(jsonObject.getString("user_id"));
-                setSecondsBeforeExpiring(jsonObject.getInt("expires_in"));
-                setRefreshToken(jsonObject.getString("refresh_token"));
-                setAccessToken(jsonObject.getString("access_token"));
-                setLoggedIn(true);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                setLoggedIn(false);
-            }
-        }
     }
 }

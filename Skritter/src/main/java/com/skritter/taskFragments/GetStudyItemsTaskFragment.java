@@ -6,6 +6,11 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
 import com.skritter.SkritterAPI;
+import com.skritter.models.StudyItem;
+import com.skritter.persistence.SkritterDatabaseHelper;
+import com.skritter.persistence.StudyItemTable;
+
+import java.util.List;
 
 /**
  * This Fragment manages a single background task and retains itself across
@@ -20,7 +25,7 @@ public class GetStudyItemsTaskFragment extends Fragment {
     public static interface TaskCallbacks {
         public void onPreExecute();
         public void onCancelled();
-        public void onPostExecute(Void result);
+        public void onPostExecute(List<StudyItem> result);
     }
 
     private TaskCallbacks mCallbacks;
@@ -94,7 +99,7 @@ public class GetStudyItemsTaskFragment extends Fragment {
     /**
      * The task to log in the user
      */
-    private class GetStudyItemsTask extends AsyncTask<String, Void, Void> {
+    private class GetStudyItemsTask extends AsyncTask<String, Void, List<StudyItem>> {
 
         @Override
         protected void onPreExecute() {
@@ -104,16 +109,30 @@ public class GetStudyItemsTaskFragment extends Fragment {
         }
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected List<StudyItem> doInBackground(String... params) {
             if (params == null || params.length != 1) {
                 return null;
             }
 
+            // Use the database as a cache to the API results. If there are relatively recent
+            // items in the table, use them instead of fetching from the API
+            // This will have to be revisited
+            SkritterDatabaseHelper db = new SkritterDatabaseHelper((Activity)mCallbacks);
+            List<StudyItem> studyItems = StudyItemTable.getInstance().getAllItems(db);
+
+            if (studyItems.size() > 0) {
+                return studyItems;
+            }
+
             String accessToken = params[0];
 
-            SkritterAPI.fetchItems(accessToken);
+            studyItems = SkritterAPI.fetchRecentItems(accessToken);
 
-            return null;
+            for (StudyItem studyItem : studyItems) {
+                StudyItemTable.getInstance().create(db, studyItem);
+            }
+
+            return studyItems;
         }
 
         @Override
@@ -125,7 +144,7 @@ public class GetStudyItemsTaskFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(Void result) {
+        protected void onPostExecute(List<StudyItem> result) {
             super.onPostExecute(result);
             // Proxy the call to the Activity
             mCallbacks.onPostExecute(result);

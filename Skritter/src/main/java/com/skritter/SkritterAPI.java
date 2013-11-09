@@ -89,7 +89,7 @@ public class SkritterAPI {
         }
 
         if ("200".equals(statusCode)) {
-            loginStatus.loadFromJSONObject(jsonObject);
+            loginStatus = new LoginStatus(jsonObject);
             loginStatus.setLoggedIn(true);
             return loginStatus;
         } else {
@@ -98,7 +98,14 @@ public class SkritterAPI {
         }
     }
 
-    public static void fetchItems(String accessToken) {
+    public static List<StudyItem> fetchRecentItems(String accessToken) {
+        List<StudyItem> studyItems = new ArrayList<StudyItem>();
+        fetchStudyItemsAndAppendToList(studyItems, accessToken, null);
+
+        return studyItems;
+    }
+
+    public static void fetchAllItems(String accessToken) {
 
         List<StudyItem> studyItems = new ArrayList<StudyItem>();
         String cursor = fetchStudyItemsAndAppendToList(studyItems, accessToken, null);
@@ -114,10 +121,13 @@ public class SkritterAPI {
         String url = "http://www.skritter.com/api/v0/items?";
 
         List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>();
-        nameValuePair.add(new BasicNameValuePair("sort", "changed"));
-        nameValuePair.add(new BasicNameValuePair("parts", "rune"));
+        nameValuePair.add(new BasicNameValuePair("sort", "next"));
         nameValuePair.add(new BasicNameValuePair("bearer_token", accessToken));
+        nameValuePair.add(new BasicNameValuePair("include_vocabs", "true"));
+        nameValuePair.add(new BasicNameValuePair("include_strokes", "true"));
+        nameValuePair.add(new BasicNameValuePair("include_decomps", "true"));
         nameValuePair.add(new BasicNameValuePair("gzip", "false"));
+
         if (cursor != null) {
             nameValuePair.add(new BasicNameValuePair("cursor", cursor));
         }
@@ -156,8 +166,7 @@ public class SkritterAPI {
 
             for (int i = 0; i < studyItemJSONArray.length(); i++) {
                 JSONObject studyItemJSONObject = studyItemJSONArray.optJSONObject(i);
-                StudyItem item = new StudyItem();
-                item.loadFromJSONObject(studyItemJSONObject);
+                StudyItem item = new StudyItem(studyItemJSONObject);
 
                 studyItems.add(item);
             }
