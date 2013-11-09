@@ -12,4 +12,25 @@
         android:layout_height="fill_parent"
         android:layout_gravity="center_horizontal"/>
 
+    <Button android:id="@+id/leftButton"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="prev"
+        android:onClick="moveLeft"/>
+    <Button android:id="@+id/rightButton"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:text="next"
+        android:onClick="moveRight"/>
+
+    <TextView android:id="@+id/itemDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"/>
+
+    <TextView android:id="@+id/itemTimes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"/>
+
 </LinearLayout>
