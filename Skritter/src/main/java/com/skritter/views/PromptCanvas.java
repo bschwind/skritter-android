@@ -12,10 +12,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class PromptCanvas extends View {
     // Bitmap and Canvas for drawing the background grid
     private Bitmap backgroundBitmap;
@@ -37,28 +33,71 @@ public class PromptCanvas extends View {
     // Keep track of the last point the user has drawn so we can use smooth quad curves
     private PointF lastPoint = new PointF(-1.0f, -1.0f);
 
+    private boolean currentlyDrawing = false;
+
     public PromptCanvas(Context context) {
         super(context);
-        defaults();
+        setDefaults();
     }
     public PromptCanvas(Context context, AttributeSet attrs) {
         super(context, attrs);
-        defaults();
+        setDefaults();
     }
     public PromptCanvas(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        defaults();
+        setDefaults();
+    }
+
+    private void setDefaults() {
+        drawPath = new Path();
+
+        strokePaint = new Paint();
+        strokePaint.setAntiAlias(true);
+        strokePaint.setColor(Color.BLACK);
+        strokePaint.setStyle(Paint.Style.STROKE);
+        strokePaint.setStrokeJoin(Paint.Join.ROUND);
+        strokePaint.setStrokeCap(Paint.Cap.ROUND);
+        strokePaint.setStrokeWidth(10);
+
+        gridPaint = new Paint();
+        gridPaint.setAntiAlias(true);
+        gridPaint.setColor(Color.BLACK);
+        gridPaint.setStyle(Paint.Style.STROKE);
+        gridPaint.setStrokeWidth(2);
+
+        statusBorderPaint = new Paint();
+        statusBorderPaint.setAntiAlias(true);
+        statusBorderPaint.setColor(Color.GREEN);
+        statusBorderPaint.setStyle(Paint.Style.STROKE);
+        statusBorderPaint.setStrokeWidth(6);
+
+        backgroundPaint = new Paint(Color.LTGRAY);
     }
 
     protected void onDraw(Canvas canvas) {
         // Draw the background, the pre-existing strokes, and the new strokes into the View's canvas
         canvas.drawBitmap(backgroundBitmap, 0, 0, null);
         canvas.drawBitmap(strokeBitmap, 0, 0, null);
-        canvas.drawPath(drawPath, strokePaint);
+//        canvas.drawPath(drawPath, strokePaint);
+
+        Paint fontPaint = new Paint(Color.BLACK);
+        fontPaint.setTextSize(80);
+        fontPaint.setAntiAlias(true);
+        fontPaint.setTextAlign(Paint.Align.CENTER);
+
+        drawTextCenteredOnPoint("日本語", getWidth() / 2.0f, 200, canvas, fontPaint);
 
         if (shouldDrawStatusBorder) {
             drawStatusBorder(canvas);
         }
+    }
+
+    private void drawTextCenteredOnPoint(String text, float x, float y, Canvas canvas, Paint fontPaint) {
+        // fontPaint must have the text alignment set to CENTER
+        float textHeight = fontPaint.getFontSpacing();
+
+        y = y - fontPaint.ascent() - (textHeight / 2.0f);
+        canvas.drawText(text, x, y, fontPaint);
     }
 
     private void drawStatusBorder(Canvas canvas) {
@@ -151,50 +190,35 @@ public class PromptCanvas extends View {
     }
 
     private void touchDown(float x, float y) {
-        drawPath.close();
         drawPath.moveTo(x, y);
 
         lastPoint.x = x;
         lastPoint.y = y;
+
+        currentlyDrawing = true;
     }
 
     private void touchMove(float x, float y) {
         drawPath.quadTo(lastPoint.x, lastPoint.y, (x + lastPoint.x) * 0.5f, (y + lastPoint.y) * 0.5f);
+        strokeCanvas.drawPath(drawPath, strokePaint);
 
         lastPoint.x = x;
         lastPoint.y = y;
     }
 
-    private void touchUp(float x, float y) {
-        drawPath.lineTo(x, y);
-        strokeCanvas.drawPath(drawPath, strokePaint);
-        drawPath.reset();
+    private float lerp(float start, float end, float amount) {
+        return start + (end - start) * amount;
     }
 
-    private void defaults() {
-        drawPath = new Path();
+    private void touchUp(float x, float y) {
+        drawPath.lineTo(x, y);
+        drawPath.reset();
 
-        strokePaint = new Paint();
-        strokePaint.setAntiAlias(true);
-        strokePaint.setColor(Color.BLACK);
-        strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setStrokeJoin(Paint.Join.ROUND);
-        strokePaint.setStrokeCap(Paint.Cap.ROUND);
-        strokePaint.setStrokeWidth(10);
+        currentlyDrawing = false;
+    }
 
-        gridPaint = new Paint();
-        gridPaint.setAntiAlias(true);
-        gridPaint.setColor(Color.BLACK);
-        gridPaint.setStyle(Paint.Style.STROKE);
-        gridPaint.setStrokeWidth(2);
-
-        statusBorderPaint = new Paint();
-        statusBorderPaint.setAntiAlias(true);
-        statusBorderPaint.setColor(Color.GREEN);
-        statusBorderPaint.setStyle(Paint.Style.STROKE);
-        statusBorderPaint.setStrokeWidth(6);
-
-        backgroundPaint = new Paint(Color.LTGRAY);
+    public boolean isCurrentlyDrawing() {
+        return currentlyDrawing;
     }
 
     public void setPenColor(int color) {
@@ -219,106 +243,5 @@ public class PromptCanvas extends View {
 
     public boolean shouldDrawStatusBorder() {
         return shouldDrawStatusBorder;
-    }
-
-    /*******************************/
-    /****  JS to Java functions ****/
-    /*******************************/
-
-    public void drawStroke(JSONObject strokeJSON) throws JSONException {
-        Stroke stroke = new Stroke();
-
-        JSONObject strokeObject = strokeJSON.getJSONObject("stroke");
-        stroke.bitmapID = strokeObject.getInt("bitmapId");
-        stroke.userDimensions = parseJSONDimension(strokeObject.getJSONObject("userDimensions"));
-        stroke.actualDimensions = parseJSONDimension(strokeObject.getJSONObject("actualDimensions"));
-
-        int alpha = strokeJSON.getInt("alpha");
-
-        // todo - tween the stroke bitmap, starting at the user bounding box (and user rotation)
-        // and ending at the actual bounding box and actual rotation
-        // Use Android's Property Animation (http://developer.android.com/guide/topics/graphics/prop-animation.html)
-
-    }
-
-    public void drawSquig(JSONObject squigJSON) throws JSONException {
-        float alpha = (float)squigJSON.getDouble("alpha");
-        JSONArray jsonPointsArray = squigJSON.getJSONArray("pointsArray");
-        PointF[] points = new PointF[jsonPointsArray.length()];
-
-        for (int i = 0; i < points.length; i++) {
-            float x = (float)jsonPointsArray.getJSONObject(i).getDouble("x");
-            float y = (float)jsonPointsArray.getJSONObject(i).getDouble("y");
-
-            points[i] = new PointF(x, y);
-        }
-
-        drawStrokeFromPoints(points);
-    }
-
-    private void drawStrokeFromPoints(PointF[] points) {
-        if (points.length <= 1) {
-            return;
-        }
-
-        PointF tempLastPoint = points[0];
-        drawPath.close();
-        drawPath.moveTo(tempLastPoint.x, tempLastPoint.y);
-
-        for (int i = 1; i < points.length-1; i++) {
-            float x = points[i].x;
-            float y = points[i].y;
-            drawPath.quadTo(tempLastPoint.x, tempLastPoint.y, (x + tempLastPoint.x) * 0.5f, (y + tempLastPoint.y) * 0.5f);
-
-            tempLastPoint.x = x;
-            tempLastPoint.y = y;
-        }
-
-        drawPath.lineTo(points[points.length-1].x, points[points.length-1].y);
-        strokeCanvas.drawPath(drawPath, strokePaint);
-        drawPath.reset();
-    }
-
-    public void drawCharacter(JSONObject characterJSON) throws JSONException{
-        JSONArray strokeArray = characterJSON.getJSONArray("strokeArray");
-
-        for (int i = 0; i < strokeArray.length(); i++) {
-            drawStroke(strokeArray.getJSONObject(i));
-        }
-    }
-
-    public void drawText(JSONObject textJSON) throws JSONException{
-        String text = textJSON.getString("text");
-        float x = (float)textJSON.getJSONObject("position").getDouble("x");
-        float y = (float)textJSON.getJSONObject("position").getDouble("y");
-
-        // todo - Parse the "style" value and use it to affect how text renders
-
-        int alpha = textJSON.getInt("alpha");
-
-        strokeCanvas.drawText(text, x, y, new Paint(Color.argb(alpha, 0,0,0)));
-    }
-
-    private Dimension parseJSONDimension(JSONObject jsonObject) throws JSONException{
-        Dimension dimension = new Dimension();
-
-        dimension.x = (float)jsonObject.getDouble("x");
-        dimension.y = (float)jsonObject.getDouble("y");
-        dimension.width = (float)jsonObject.getDouble("w");
-        dimension.height = (float)jsonObject.getDouble("h");
-        dimension.rotation = (float)jsonObject.getDouble("rotation");
-
-        return dimension;
-    }
-
-    // Data structures to help when dealing with JSON data
-    private class Stroke {
-        public int bitmapID;
-        public Dimension userDimensions;
-        public Dimension actualDimensions;
-    }
-
-    private class Dimension {
-        public float x, y, width, height, rotation;
     }
 }
