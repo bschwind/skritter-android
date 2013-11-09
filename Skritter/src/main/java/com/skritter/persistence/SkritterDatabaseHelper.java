@@ -12,7 +12,8 @@ public class SkritterDatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "skritterDatabase";
 
     private static final SkritterDatabaseTable[] tables = new SkritterDatabaseTable[] {
-            new StudyItemTable()
+            new StudyItemTable(),
+            new VocabTable()
     };
 
     public SkritterDatabaseHelper(Context context) {

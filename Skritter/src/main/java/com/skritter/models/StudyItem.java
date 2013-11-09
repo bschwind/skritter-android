@@ -1,5 +1,7 @@
 package com.skritter.models;
 
+import com.skritter.utils.JSONUtil;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,6 +23,33 @@ public class StudyItem extends SkritterObject {
     private long changed;
     private boolean previousSuccess;
     private long previousInterval;
+
+    public StudyItem(JSONObject jsonObject) {
+        super(jsonObject);
+
+        if (jsonObject != null) {
+            try {
+                setId(jsonObject.getString("id"));
+                setPart(jsonObject.getString("part"));
+                setVocabIDs(JSONUtil.getStringArrayFromJSONArray(jsonObject.getJSONArray("vocabIds")));
+                setStyle(jsonObject.getString("style"));
+                setTimeStudied(jsonObject.getLong("timeStudied"));
+                setNext(jsonObject.getLong("next"));
+                setLast(jsonObject.optLong("last"));
+                setInterval(jsonObject.optLong("interval"));
+                setVocabListIDs(JSONUtil.getStringArrayFromJSONArray(jsonObject.getJSONArray("vocabListIds")));
+                setSectionIDs(JSONUtil.getStringArrayFromJSONArray(jsonObject.getJSONArray("sectionIds")));
+                setReviews(jsonObject.getInt("reviews"));
+                setSuccesses(jsonObject.getInt("successes"));
+                setCreated(jsonObject.getLong("created"));
+                setChanged(jsonObject.getLong("changed"));
+                setPreviousSuccess(jsonObject.optBoolean("previousSuccess"));
+                setPreviousInterval(jsonObject.optLong("previousInterval"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public int getDatabaseID() {
         return databaseID;
@@ -158,29 +187,7 @@ public class StudyItem extends SkritterObject {
         this.previousInterval = previousInterval;
     }
 
-    @Override
-    public void loadFromJSONObject(JSONObject jsonObject) {
-        if (jsonObject != null) {
-            try {
-                setId(jsonObject.getString("id"));
-                setPart(jsonObject.getString("part"));
-                setVocabIDs(getStringArrayFromJSONArray(jsonObject.getJSONArray("vocabIds")));
-                setStyle(jsonObject.getString("style"));
-                setTimeStudied(jsonObject.getLong("timeStudied"));
-                setNext(jsonObject.getLong("next"));
-                setLast(jsonObject.optLong("last"));
-                setInterval(jsonObject.optLong("interval"));
-                setVocabListIDs(getStringArrayFromJSONArray(jsonObject.getJSONArray("vocabListIds")));
-                setSectionIDs(getStringArrayFromJSONArray(jsonObject.getJSONArray("sectionIds")));
-                setReviews(jsonObject.getInt("reviews"));
-                setSuccesses(jsonObject.getInt("successes"));
-                setCreated(jsonObject.getLong("created"));
-                setChanged(jsonObject.getLong("changed"));
-                setPreviousSuccess(jsonObject.optBoolean("previousSuccess"));
-                setPreviousInterval(jsonObject.optLong("previousInterval"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
+    public String toString() {
+        return id;
     }
 }
