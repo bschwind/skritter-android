@@ -39,7 +39,7 @@ public class SkritterAPI {
             return loginStatus;
         }
 
-        String url = "https://www.skritter.com/api/v0/oauth2/token";
+        String url = "http://www.skritter.com/api/v0/oauth2/token";
 
         AndroidHttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
         HttpPost httpPost = new HttpPost(url);
@@ -66,7 +66,7 @@ public class SkritterAPI {
         String responseBody;
 
         try {
-            ResponseHandler<String> responseHandler=new BasicResponseHandler();
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
             responseBody = httpClient.execute(httpPost, responseHandler);
         } catch (ClientProtocolException cpe) {
             cpe.printStackTrace();
