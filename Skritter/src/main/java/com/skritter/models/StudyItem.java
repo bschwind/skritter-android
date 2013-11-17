@@ -191,6 +191,22 @@ public class StudyItem extends SkritterObject {
         this.previousInterval = previousInterval;
     }
 
+    public boolean isRune() {
+        return "rune".equals(getPart());
+    }
+
+    public boolean isReading() {
+        return "rdng".equals(getPart());
+    }
+
+    public boolean isDefinition() {
+        return "defn".equals(getPart());
+    }
+
+    public boolean isTone() {
+        return "tone".equals(getPart());
+    }
+
     public String toString() {
         return id;
     }

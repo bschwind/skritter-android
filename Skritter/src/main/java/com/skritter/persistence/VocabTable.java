@@ -78,6 +78,21 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
         return vocab;
     }
 
+    public Vocab getByStringID(SkritterDatabaseHelper db, String id) {
+        String selectQuery = "SELECT  * FROM " + getTableName() + " WHERE " + VOCAB_ID + " = '" + id + "'";
+
+        SQLiteDatabase sqlDB = db.getReadableDatabase();
+        Cursor cursor = sqlDB.rawQuery(selectQuery, null);
+
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+
+        Vocab vocab = populateItem(cursor);
+
+        return vocab;
+    }
+
     @Override
     public long update(SkritterDatabaseHelper db, Vocab vocab) {
         ContentValues values = populateContentValues(vocab);

@@ -14,6 +14,9 @@ import android.widget.TextView;
 
 import com.skritter.SkritterApplication;
 import com.skritter.models.StudyItem;
+import com.skritter.models.Vocab;
+import com.skritter.persistence.SkritterDatabaseHelper;
+import com.skritter.persistence.VocabTable;
 import com.skritter.taskFragments.GetStudyItemsTaskFragment;
 import com.skritter.views.PromptCanvas;
 import com.skritter.R;
@@ -21,12 +24,13 @@ import com.skritter.R;
 import java.util.List;
 
 public class StudyActivity extends FragmentActivity implements GetStudyItemsTaskFragment.TaskCallbacks {
-    private PromptCanvas canvas;
+    private PromptCanvas promptCanvas;
     private GetStudyItemsTaskFragment getStudyItemsTaskFragment;
     private ProgressDialog progressDialog;
     private List<StudyItem> itemsToStudy;
     private int currentIndex = 0;
     private StudyItem currentItem;
+    private SkritterDatabaseHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,10 +42,12 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         // Set our layout
         setContentView(R.layout.activity_study);
 
-        canvas = (PromptCanvas) findViewById(R.id.canvas);
-        canvas.setBackgroundColor(Color.LTGRAY);
-        canvas.setPenColor(Color.BLACK);
-        canvas.setGridColor(Color.GRAY);
+        db = new SkritterDatabaseHelper(this);
+
+        promptCanvas = (PromptCanvas) findViewById(R.id.canvas);
+        promptCanvas.setBackgroundColor(Color.WHITE);
+        promptCanvas.setPenColor(Color.BLACK);
+        promptCanvas.setGridColor(Color.GRAY);
 
         // Restore saved state using the code pattern below
         if (savedInstanceState != null) {
@@ -85,9 +91,9 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     }
 
     public void clearStrokes(View view) {
-        canvas.setShouldDrawStatusBorder(true);
-        canvas.setStatusBorderColor(Color.RED);
-        canvas.clearStrokes();
+        promptCanvas.setShouldDrawStatusBorder(true);
+        promptCanvas.setStatusBorderColor(Color.RED);
+        promptCanvas.clearStrokes();
     }
 
     private void initializeProgressDialog() {
@@ -102,28 +108,49 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         progressDialog.show();
     }
 
-    public void moveLeft(View view) {
+    public void onBack(View view) {
         currentIndex--;
         if (currentIndex < 0) {
             currentIndex = 0;
         }
 
+        updateCurrentIndex();
+    }
+
+    public void onErase(View view) {
+        promptCanvas.clearStrokes();
+    }
+
+    public void onShow(View view) {
+
+    }
+
+    public void onCorrect(View view) {
+
+    }
+
+    public void onNext(View view) {
+        currentIndex++;
+        if (currentIndex >= itemsToStudy.size()) {
+            currentIndex = itemsToStudy.size() - 1;
+        }
+
+        updateCurrentIndex();
+    }
+
+    private void updateCurrentIndex() {
         currentItem = itemsToStudy.get(currentIndex);
+        String[] vocabIDs = currentItem.getVocabIDs();
+
+        Vocab vocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
 
         TextView text = (TextView) findViewById(R.id.itemDetails);
         text.setText(currentItem.getId());
 
         TextView timeText = (TextView) findViewById(R.id.itemTimes);
         timeText.setText("" + currentItem.getReviews());
-    }
 
-    public void moveRight(View view) {
-        currentIndex++;
-        if (currentIndex >= itemsToStudy.size()) {
-            currentIndex = itemsToStudy.size() - 1;
-        }
-
-        currentItem = itemsToStudy.get(currentIndex);
+        promptCanvas.setStudyItemAndVocab(currentItem, vocab);
 
         updateText();
     }
@@ -156,10 +183,7 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             // We've got problems....try and re-fetch?
         }
 
-//        currentIndex = 0;
-        currentItem = itemsToStudy.get(currentIndex);
-
-        updateText();
+        updateCurrentIndex();
 
         if (progressDialog != null) {
             progressDialog.dismiss();

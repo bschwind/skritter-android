@@ -4,7 +4,6 @@ import android.net.http.AndroidHttpClient;
 import android.util.Base64;
 
 import com.skritter.models.LoginStatus;
-import com.skritter.models.StudyItem;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -15,7 +14,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,9 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by bschwind on 10/20/13.
- */
 public class SkritterAPI {
     private static String apiClientID = "bschwindapiclient";
     private static String apiClientSecret = "c7e7251c01b830b8ed87ea4bb39fdd";
@@ -98,26 +93,39 @@ public class SkritterAPI {
         }
     }
 
-    public static List<StudyItem> fetchRecentItems(String accessToken) {
-        List<StudyItem> studyItems = new ArrayList<StudyItem>();
-        fetchStudyItemsAndAppendToList(studyItems, accessToken, null);
-
-        return studyItems;
+    public static JSONObject fetchRecentItems(String accessToken) {
+        return fetchStudyItemsWithCursor(accessToken, null);
     }
 
-    public static void fetchAllItems(String accessToken) {
+    public static JSONObject fetchAllItems(String accessToken) {
+        // This is extremely slow. I don't even know if it ever finishes
+        // Use the batching system instead
 
-        List<StudyItem> studyItems = new ArrayList<StudyItem>();
-        String cursor = fetchStudyItemsAndAppendToList(studyItems, accessToken, null);
+        JSONObject jsonObject = fetchStudyItemsWithCursor(accessToken, null);
 
-        while (cursor != null) {
-            cursor = fetchStudyItemsAndAppendToList(studyItems, accessToken, cursor);
+        if (jsonObject == null) {
+            return null;
         }
 
-        System.out.println(studyItems);
+        String cursor = jsonObject.optString("cursor");
+
+        while (cursor != null) {
+            JSONObject newJsonObject = fetchStudyItemsWithCursor(accessToken, cursor);
+            try {
+                jsonObject.accumulate("Items", newJsonObject.optJSONArray("Items"));
+                jsonObject.accumulate("Vocabs", newJsonObject.optJSONArray("Vocabs"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return jsonObject;
+            }
+
+            cursor = newJsonObject.optString("cursor");
+        }
+
+        return jsonObject;
     }
 
-    private static String fetchStudyItemsAndAppendToList(List<StudyItem> studyItems, String accessToken, String cursor) {
+    private static JSONObject fetchStudyItemsWithCursor(String accessToken, String cursor) {
         String url = "http://www.skritter.com/api/v0/items?";
 
         List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>();
@@ -162,20 +170,7 @@ public class SkritterAPI {
         }
 
         if ("200".equals(statusCode)) {
-            JSONArray studyItemJSONArray = jsonObject.optJSONArray("Items");
-
-            for (int i = 0; i < studyItemJSONArray.length(); i++) {
-                JSONObject studyItemJSONObject = studyItemJSONArray.optJSONObject(i);
-                StudyItem item = new StudyItem(studyItemJSONObject);
-
-                studyItems.add(item);
-            }
-
-            if ("".equals(jsonObject.optString("cursor"))) {
-                return null;
-            }
-
-            return jsonObject.optString("cursor");
+            return jsonObject;
         } else {
             return null;
         }

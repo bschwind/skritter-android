@@ -12,25 +12,63 @@
         android:layout_height="fill_parent"
         android:layout_gravity="center_horizontal"/>
 
-    <Button android:id="@+id/leftButton"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:text="prev"
-        android:onClick="moveLeft"/>
-    <Button android:id="@+id/rightButton"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:text="next"
-        android:onClick="moveRight"/>
-
-    <TextView android:id="@+id/itemDetails"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/buttonRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"/>
+        tools:context=".StudyActivity"
+        android:orientation="horizontal">
 
-    <TextView android:id="@+id/itemTimes"
+        <Button android:id="@+id/leftButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="back"
+            android:onClick="onBack"/>
+        <Button android:id="@+id/eraseButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="erase"
+            android:onClick="onErase"/>
+        <Button android:id="@+id/showButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="show"
+            android:onClick="onShow"/>
+        <Button android:id="@+id/correctButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:text="correct"
+            android:onClick="onCorrect"/>
+        <Button android:id="@+id/nextButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="next"
+            android:onClick="onNext"/>
+        </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/debugRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"/>
+        tools:context=".StudyActivity"
+        android:orientation="horizontal">
+
+        <TextView android:id="@+id/itemDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"/>
+
+        <TextView android:id="@+id/itemTimes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"/>
+    </LinearLayout>
 
 </LinearLayout>

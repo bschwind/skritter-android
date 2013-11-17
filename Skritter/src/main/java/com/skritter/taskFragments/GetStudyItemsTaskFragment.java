@@ -7,9 +7,15 @@ import android.support.v4.app.Fragment;
 
 import com.skritter.SkritterAPI;
 import com.skritter.models.StudyItem;
+import com.skritter.models.Vocab;
 import com.skritter.persistence.SkritterDatabaseHelper;
 import com.skritter.persistence.StudyItemTable;
+import com.skritter.persistence.VocabTable;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -126,13 +132,37 @@ public class GetStudyItemsTaskFragment extends Fragment {
 
             String accessToken = params[0];
 
-            studyItems = SkritterAPI.fetchRecentItems(accessToken);
+            JSONObject recentItemsJSON = SkritterAPI.fetchRecentItems(accessToken);
 
-            for (StudyItem studyItem : studyItems) {
-                StudyItemTable.getInstance().create(db, studyItem);
+            if (recentItemsJSON == null) {
+                return studyItems;
             }
 
-            return studyItems;
+            populateDBWithJSONItems(db, recentItemsJSON);
+
+            return StudyItemTable.getInstance().getAllItems(db);
+        }
+
+        private void populateDBWithJSONItems(SkritterDatabaseHelper db, JSONObject response) {
+            // Populate study items from the response
+            JSONArray studyItemJSONArray = response.optJSONArray("Items");
+
+            for (int i = 0; i < studyItemJSONArray.length(); i++) {
+                JSONObject studyItemJSONObject = studyItemJSONArray.optJSONObject(i);
+                StudyItem item = new StudyItem(studyItemJSONObject);
+
+                StudyItemTable.getInstance().create(db, item);
+            }
+
+            // Populate Vocabs which were included in the study item response
+            JSONArray vocabJSONArray = response.optJSONArray("Vocabs");
+
+            for (int i = 0; i < vocabJSONArray.length(); i++) {
+                JSONObject vocabJSONObject = vocabJSONArray.optJSONObject(i);
+                Vocab vocab = new Vocab(vocabJSONObject);
+
+                VocabTable.getInstance().create(db, vocab);
+            }
         }
 
         @Override

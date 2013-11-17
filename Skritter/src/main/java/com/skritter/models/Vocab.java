@@ -30,12 +30,12 @@ public class Vocab extends SkritterObject {
         if (jsonObject != null) {
             try {
                 setId(jsonObject.getString("id"));
-                setContainedVocabIDs(JSONUtil.getStringArrayFromJSONArray(jsonObject.getJSONArray("containedVocabIds")));
+                setContainedVocabIDs(JSONUtil.getStringArrayFromJSONArray(jsonObject.optJSONArray("containedVocabIds")));
                 setLanguage(jsonObject.getString("lang"));
                 setRareKanji(jsonObject.getBoolean("rareKanji"));
-                setAudioFile(jsonObject.getString("audio"));
+                setAudioFile(jsonObject.optString("audio"));
                 setToughness(jsonObject.getInt("toughness"));
-                setChanged(jsonObject.getLong("changed"));
+                setChanged(jsonObject.optLong("changed"));
                 setWriting(jsonObject.getString("writing"));
                 setToughnessString(jsonObject.getString("toughnessString"));
                 setDefinitions(jsonObject.getString("definitions"));
@@ -129,6 +129,23 @@ public class Vocab extends SkritterObject {
 
     public String getDefinitions() {
         return definitions;
+    }
+
+    public String getDefinitionByLanguage(String language) {
+        String definitionJSON = getDefinitions();
+
+        if (definitionJSON != null && definitionJSON.length() > 0) {
+            JSONObject json;
+            try {
+                json = new JSONObject(definitionJSON);
+            } catch (JSONException e) {
+                return "";
+            }
+
+            return json.optString(language);
+        }
+
+        return "";
     }
 
     public void setDefinitions(String definitions) {
