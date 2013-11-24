@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -48,6 +49,30 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         promptCanvas.setBackgroundColor(Color.WHITE);
         promptCanvas.setPenColor(Color.BLACK);
         promptCanvas.setGridColor(Color.GRAY);
+        promptCanvas.setEventListener(new PromptCanvas.IGradingButtonListener() {
+
+            @Override
+            public void onGradingButtonPressed(int gradingButton) {
+                promptCanvas.setShouldDrawStatusBorder(true);
+                switch (gradingButton) {
+                    case 0:
+                        promptCanvas.setStatusBorderColor(Color.RED);
+                        break;
+                    case 1:
+                        promptCanvas.setStatusBorderColor(Color.YELLOW);
+                        break;
+                    case 2:
+                        promptCanvas.setStatusBorderColor(Color.GREEN);
+                        break;
+                    case 3:
+                        promptCanvas.setStatusBorderColor(Color.BLUE);
+                        break;
+                    default:
+                        break;
+                }
+//                onNext(null);
+            }
+        });
 
         // Restore saved state using the code pattern below
         if (savedInstanceState != null) {

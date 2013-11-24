@@ -9,15 +9,28 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.skritter.R;
+import com.skritter.models.LoginStatus;
 import com.skritter.models.StudyItem;
 import com.skritter.models.Vocab;
 
 public class PromptCanvas extends View {
+    public interface IGradingButtonListener {
+        public void onGradingButtonPressed(int gradingButton);
+    }
+
+    private IGradingButtonListener gradingButtonListener;
+
+    public void setEventListener(IGradingButtonListener gradingButtonListener) {
+        this.gradingButtonListener = gradingButtonListener;
+    }
+
     // Bitmap and Canvas for drawing the background grid
     private Bitmap backgroundBitmap;
     private Canvas backgroundCanvas;
@@ -27,11 +40,17 @@ public class PromptCanvas extends View {
     private Canvas strokeCanvas;
 
     // The different Paint styles for drawing the canvas elements
-    private Paint strokePaint, backgroundPaint, gridPaint, statusBorderPaint, fontPaint;
+    private Paint strokePaint, backgroundPaint, gridPaint, statusBorderPaint, fontPaint, gradingNumberFontPaint, gradingTextFontPaint;
 
     // The status border is red or green, depending on whether or not the user got the correct stroke
     private boolean shouldDrawStatusBorder = false;
 
+    private StudyItem studyItem;
+    private Vocab vocab;
+
+    private int customWidth, customHeight;
+
+    // Rune variables
     // The Path object used to draw the user's strokes
     private Path drawPath;
 
@@ -40,8 +59,10 @@ public class PromptCanvas extends View {
 
     private boolean currentlyDrawing = false;
 
-    private StudyItem studyItem;
-    private Vocab vocab;
+
+    // Reading Variables
+    private boolean hasTapped = false;
+
 
     public PromptCanvas(Context context) {
         super(context);
@@ -82,9 +103,24 @@ public class PromptCanvas extends View {
         backgroundPaint = new Paint(Color.WHITE);
 
         fontPaint = new Paint(Color.BLACK);
-        fontPaint.setTextSize(80);
         fontPaint.setAntiAlias(true);
         fontPaint.setTextAlign(Paint.Align.CENTER);
+
+        gradingNumberFontPaint = new Paint(Color.BLACK);
+        gradingNumberFontPaint.setAntiAlias(true);
+        gradingNumberFontPaint.setTextAlign(Paint.Align.CENTER);
+
+        gradingTextFontPaint = new Paint(Color.BLACK);
+        gradingTextFontPaint.setAntiAlias(true);
+        gradingTextFontPaint.setTextAlign(Paint.Align.CENTER);
+
+        setFontHeights(customWidth, customHeight);
+    }
+
+    private void setFontHeights(int width, int height) {
+        fontPaint.setTextSize(height * 0.114f);
+        gradingNumberFontPaint.setTextSize(height * 0.0514f);
+        gradingTextFontPaint.setTextSize(height * 0.0257f);
     }
 
     protected void onDraw(Canvas canvas) {
@@ -122,14 +158,14 @@ public class PromptCanvas extends View {
         Resources resources = getResources();
         String tapToShow = resources.getString(R.string.tapToShowReading);
 
-        drawTextCenteredOnPoint(vocab.getWriting(), getWidth() / 2.0f, 100, canvas, fontPaint);
+        drawTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.146f * customHeight, canvas, fontPaint);
+        drawTextCenteredOnPoint(vocab.getDefinitionByLanguage("en"), customWidth / 2.0f, 0.420f * customHeight, canvas, fontPaint);
 
-        boolean showReading = false;
-
-        if (showReading) {
-            drawTextCenteredOnPoint(vocab.getReading(), getWidth() / 2.0f, 400, canvas, fontPaint);
+        if (hasTapped) {
+            drawTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.617f * customHeight, canvas, fontPaint);
+            drawGradingButtons(canvas);
         } else {
-            drawTextCenteredOnPoint(tapToShow, getWidth() / 2.0f, 400, canvas, fontPaint);
+            drawTextCenteredOnPoint(tapToShow, customWidth / 2.0f, 0.617f * customHeight, canvas, fontPaint);
         }
     }
 
@@ -139,21 +175,20 @@ public class PromptCanvas extends View {
         Resources resources = getResources();
         String tapToShow = resources.getString(R.string.tapToShowDefinition);
 
-        drawTextCenteredOnPoint(vocab.getWriting(), getWidth() / 2.0f, 100, canvas, fontPaint);
-        drawTextCenteredOnPoint(vocab.getReading(), getWidth() / 2.0f, 200, canvas, fontPaint);
+        drawTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.11f * customHeight, canvas, fontPaint);
+        drawTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.411f * customHeight, canvas, fontPaint);
 
-        boolean showDefinition = false;
-
-        if (showDefinition) {
-            drawTextCenteredOnPoint(vocab.getDefinitionByLanguage("en"), getWidth() / 2.0f, 400, canvas, fontPaint);
+        if (hasTapped) {
+            drawTextCenteredOnPoint(vocab.getDefinitionByLanguage("en"), customWidth / 2.0f, 0.551f * customHeight, canvas, fontPaint);
+            drawGradingButtons(canvas);
         } else {
-            drawTextCenteredOnPoint(tapToShow, getWidth() / 2.0f, 400, canvas, fontPaint);
+            drawTextCenteredOnPoint(tapToShow, customWidth / 2.0f, 0.514f * customHeight, canvas, fontPaint);
         }
     }
 
     private void drawToneCanvas(Canvas canvas) {
         drawNonRuneBackground(canvas);
-        drawTextCenteredOnPoint("tone", getWidth() / 2.0f, 200, canvas, fontPaint);
+        drawTextCenteredOnPoint("tone", customWidth / 2.0f, 200, canvas, fontPaint);
     }
 
     private void drawTextCenteredOnPoint(String text, float x, float y, Canvas canvas, Paint fontPaint) {
@@ -165,10 +200,10 @@ public class PromptCanvas extends View {
     }
 
     private void drawStatusBorder(Canvas canvas) {
-        canvas.drawLine(0, 0, canvas.getWidth(), 0, statusBorderPaint);
-        canvas.drawLine(canvas.getWidth(), 0, canvas.getWidth(), canvas.getHeight(), statusBorderPaint);
-        canvas.drawLine(canvas.getWidth(), canvas.getHeight(), 0, canvas.getHeight(), statusBorderPaint);
-        canvas.drawLine(0, canvas.getHeight(), 0, 0, statusBorderPaint);
+        canvas.drawLine(0, 0, customWidth, 0, statusBorderPaint);
+        canvas.drawLine(customWidth, 0, customWidth, customHeight, statusBorderPaint);
+        canvas.drawLine(customWidth, customHeight, 0, customHeight, statusBorderPaint);
+        canvas.drawLine(0, customHeight, 0, 0, statusBorderPaint);
     }
 
     private void drawRuneBackground(Canvas canvas) {
@@ -180,26 +215,41 @@ public class PromptCanvas extends View {
 
     private void drawGrid(Canvas canvas) {
         // Draw intersecting lines
-        canvas.drawLine(0, 0, canvas.getWidth(), canvas.getHeight(), gridPaint);
-        canvas.drawLine(canvas.getWidth(), 0, 0, canvas.getHeight(), gridPaint);
-        canvas.drawLine(canvas.getWidth() * 0.5f, 0, canvas.getWidth() * 0.5f, canvas.getHeight(), gridPaint);
-        canvas.drawLine(0, canvas.getHeight() * 0.5f, canvas.getWidth(), canvas.getHeight() * 0.5f, gridPaint);
+        canvas.drawLine(0, 0, customWidth, customHeight, gridPaint);
+        canvas.drawLine(customWidth, 0, 0, customHeight, gridPaint);
+        canvas.drawLine(customWidth * 0.5f, 0, customWidth * 0.5f, customHeight, gridPaint);
+        canvas.drawLine(0, customHeight * 0.5f, customWidth, customHeight * 0.5f, gridPaint);
 
         // Draw a thin border
-        canvas.drawLine(0, 0, canvas.getWidth(), 0, gridPaint);
-        canvas.drawLine(canvas.getWidth(), 0, canvas.getWidth(), canvas.getHeight(), gridPaint);
-        canvas.drawLine(canvas.getWidth(), canvas.getHeight(), 0, canvas.getHeight(), gridPaint);
-        canvas.drawLine(0, canvas.getHeight(), 0, 0, gridPaint);
+        canvas.drawLine(0, 0, customWidth, 0, gridPaint);
+        canvas.drawLine(customWidth, 0, customWidth, customHeight, gridPaint);
+        canvas.drawLine(customWidth, customHeight, 0, customHeight, gridPaint);
+        canvas.drawLine(0, customHeight, 0, 0, gridPaint);
     }
 
     private void drawNonRuneBackground(Canvas canvas) {
         canvas.drawColor(backgroundPaint.getColor());
 
         // Draw a thin border
-        canvas.drawLine(0, 0, canvas.getWidth(), 0, gridPaint);
-        canvas.drawLine(canvas.getWidth(), 0, canvas.getWidth(), canvas.getHeight(), gridPaint);
-        canvas.drawLine(canvas.getWidth(), canvas.getHeight(), 0, canvas.getHeight(), gridPaint);
-        canvas.drawLine(0, canvas.getHeight(), 0, 0, gridPaint);
+        canvas.drawLine(0, 0, customWidth, 0, gridPaint);
+        canvas.drawLine(customWidth, 0, customWidth, customHeight, gridPaint);
+        canvas.drawLine(customWidth, customHeight, 0, customHeight, gridPaint);
+        canvas.drawLine(0, customHeight, 0, 0, gridPaint);
+    }
+
+    private void drawGradingButtons(Canvas canvas) {
+        float buttonHeightRatio = 0.12f;
+        float buttonHeight = customHeight * buttonHeightRatio;
+        float buttonWidth = customWidth / 4.0f;
+        float halfButtonWidth = buttonWidth / 2.0f;
+
+        String[] gradingTexts = new String[] { "forgot", "so-so", "got it", "too easy" };
+
+        for (int i = 0; i < 4; i++) {
+            drawTextCenteredOnPoint("" + (i+1), (i * buttonWidth) + halfButtonWidth, customHeight - (buttonHeight * 0.75f), canvas, gradingNumberFontPaint);
+            drawTextCenteredOnPoint(gradingTexts[i], (i * buttonWidth) + halfButtonWidth, customHeight - (buttonHeight * 0.25f), canvas, gradingTextFontPaint);
+            canvas.drawRect((i * buttonWidth), customHeight - buttonHeight, ((i+1) * buttonWidth), customHeight, gridPaint);
+        }
     }
 
     public void clearStrokes() {
@@ -211,6 +261,8 @@ public class PromptCanvas extends View {
 
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
+        customWidth = width;
+        customHeight = height;
 
         // todo - Call bitmap.recycle() on these bitmaps...if that actually helps clear resources
 
@@ -220,6 +272,8 @@ public class PromptCanvas extends View {
 
         strokeBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         strokeCanvas = new Canvas(strokeBitmap);
+
+        setFontHeights(customWidth, customHeight);
     }
 
     // This is experimental. Currently it is used to enforce a square canvas every time we resize.
@@ -228,16 +282,21 @@ public class PromptCanvas extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int size ;
+
+        int size;
         int width = getMeasuredWidth();
         int height = getMeasuredHeight();
+        int widthWithoutPadding = width - getPaddingLeft() - getPaddingRight();
+        int heightWithoutPadding = height - getPaddingTop() - getPaddingBottom();
 
-        if (width > height) {
-            size = height;
+        // set the dimensions
+        if (widthWithoutPadding > heightWithoutPadding) {
+            size = heightWithoutPadding;
         } else {
-            size = width;
+            size = widthWithoutPadding;
         }
-        setMeasuredDimension(size, size);
+
+        setMeasuredDimension(size + getPaddingLeft() + getPaddingRight(), size + getPaddingTop() + getPaddingBottom());
     }
 
     @Override
@@ -264,6 +323,22 @@ public class PromptCanvas extends View {
     }
 
     private void touchDown(float x, float y) {
+        if (studyItem == null) {
+            // Do nothing?
+        } else if (studyItem.isRune()) {
+            runeTouchDown(x, y);
+        } else if (studyItem.isReading()) {
+            readingTouchDown(x, y);
+        } else if (studyItem.isDefinition()) {
+            definitionTouchDown(x, y);
+        } else if (studyItem.isTone()) {
+            toneTouchDown(x, y);
+        } else {
+            // Shouldn't be here
+        }
+    }
+
+    private void runeTouchDown(float x, float y) {
         drawPath.moveTo(x, y);
 
         lastPoint.x = x;
@@ -272,7 +347,35 @@ public class PromptCanvas extends View {
         currentlyDrawing = true;
     }
 
+    private void readingTouchDown(float x, float y) {
+
+    }
+
+    private void definitionTouchDown(float x, float y) {
+
+    }
+
+    private void toneTouchDown(float x, float y) {
+
+    }
+
     private void touchMove(float x, float y) {
+        if (studyItem == null) {
+            // Do nothing?
+        } else if (studyItem.isRune()) {
+            runeTouchMove(x, y);
+        } else if (studyItem.isReading()) {
+            readingTouchMove(x, y);
+        } else if (studyItem.isDefinition()) {
+            definitionTouchMove(x, y);
+        } else if (studyItem.isTone()) {
+            toneTouchMove(x, y);
+        } else {
+            // Shouldn't be here
+        }
+    }
+
+    private void runeTouchMove(float x, float y) {
         drawPath.quadTo(lastPoint.x, lastPoint.y, (x + lastPoint.x) * 0.5f, (y + lastPoint.y) * 0.5f);
         strokeCanvas.drawPath(drawPath, strokePaint);
 
@@ -280,15 +383,82 @@ public class PromptCanvas extends View {
         lastPoint.y = y;
     }
 
-    private float lerp(float start, float end, float amount) {
-        return start + (end - start) * amount;
+    private void readingTouchMove(float x, float y) {
+
+    }
+
+    private void definitionTouchMove(float x, float y) {
+
+    }
+
+    private void toneTouchMove(float x, float y) {
+
     }
 
     private void touchUp(float x, float y) {
+        if (studyItem == null) {
+            // Do nothing?
+        } else if (studyItem.isRune()) {
+            runeTouchUp(x, y);
+        } else if (studyItem.isReading()) {
+            readingTouchUp(x, y);
+        } else if (studyItem.isDefinition()) {
+            definitionTouchUp(x, y);
+        } else if (studyItem.isTone()) {
+            toneTouchUp(x, y);
+        } else {
+            // Shouldn't be here
+        }
+    }
+
+    private void runeTouchUp(float x, float y) {
         drawPath.lineTo(x, y);
         drawPath.reset();
 
         currentlyDrawing = false;
+    }
+
+    private void readingTouchUp(float x, float y) {
+        if (!hasTapped) {
+            hasTapped = true;
+            return;
+        }
+
+        handleGradingButtonTap(x, y);
+    }
+
+    private void definitionTouchUp(float x, float y) {
+        if (!hasTapped) {
+            hasTapped = true;
+            return;
+        }
+
+        handleGradingButtonTap(x, y);
+    }
+
+    private void toneTouchUp(float x, float y) {
+
+    }
+
+    private void handleGradingButtonTap(float x, float y) {
+        float buttonHeightRatio = 0.12f;
+        float buttonHeight = customHeight * buttonHeightRatio;
+        float buttonWidth = customWidth / 4.0f;
+        float halfButtonWidth = buttonWidth / 2.0f;
+
+        String[] gradingTexts = new String[] { "forgot", "so-so", "got it", "too easy" };
+
+        for (int i = 0; i < 4; i++) {
+            Rect rect = new Rect((int)(i * buttonWidth), (int)(customHeight - buttonHeight), (int)((i+1) * buttonWidth), customHeight);
+
+            if (rect.contains((int)x, (int)y)) {
+                if (gradingButtonListener != null) {
+                    gradingButtonListener.onGradingButtonPressed(i);
+                }
+
+                break;
+            }
+        }
     }
 
     public boolean isCurrentlyDrawing() {
@@ -322,6 +492,9 @@ public class PromptCanvas extends View {
     public void setStudyItemAndVocab(StudyItem studyItem, Vocab vocab) {
         this.studyItem = studyItem;
         this.vocab = vocab;
+
+        hasTapped = false;
+
         invalidate();
     }
 }
