@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.skritter.models.StudyItem;
 import com.skritter.models.Vocab;
 
 public class VocabTable extends SkritterDatabaseTable<Vocab> {
@@ -57,9 +56,9 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
         ContentValues values = populateContentValues(vocab);
 
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        long studyItemID = sqlDB.insert(getTableName(), null, values);
+        long vocabID = sqlDB.insert(getTableName(), null, values);
 
-        return studyItemID;
+        return vocabID;
     }
 
     @Override
