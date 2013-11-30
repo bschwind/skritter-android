@@ -2,9 +2,6 @@ package com.skritter;
 
 import android.app.Application;
 
-/**
- * Created by bschwind on 10/12/13.
- */
 public class SkritterApplication extends Application {
     public static final String SKRITTER_SHARED_PREFERENCES = "SkritterPreferences";
 
