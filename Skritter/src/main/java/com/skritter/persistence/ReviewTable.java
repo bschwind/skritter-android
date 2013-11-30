@@ -8,7 +8,6 @@ import com.skritter.models.Review;
 
 public class ReviewTable extends SkritterDatabaseTable<Review> {
 
-    private static final String ID = "id";
     private static final String ITEM_ID = "item_id";
     private static final String SCORE = "score";
     private static final String BEAR_TIME = "bear_time";
@@ -36,7 +35,6 @@ public class ReviewTable extends SkritterDatabaseTable<Review> {
     @Override
     public Column[] getColumns() {
         return new Column[] {
-                new Column(true, ID, Column.INTEGER_TYPE),
                 new Column(false, ITEM_ID, Column.TEXT_TYPE),
                 new Column(false, SCORE, Column.INTEGER_TYPE),
                 new Column(false, BEAR_TIME, Column.INTEGER_TYPE),
@@ -64,7 +62,7 @@ public class ReviewTable extends SkritterDatabaseTable<Review> {
 
     @Override
     public Review read(SkritterDatabaseHelper db, long id) {
-        String selectQuery = "SELECT  * FROM " + getTableName() + " WHERE " + ID + " = " + id;
+        String selectQuery = "SELECT rowid, * FROM " + getTableName() + " WHERE rowid = " + id;
 
         SQLiteDatabase sqlDB = db.getReadableDatabase();
         Cursor cursor = sqlDB.rawQuery(selectQuery, null);
@@ -83,20 +81,20 @@ public class ReviewTable extends SkritterDatabaseTable<Review> {
         ContentValues values = populateContentValues(review);
 
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        return sqlDB.update(getTableName(), values, ID + " = ?", new String[] { String.valueOf(review.getDatabaseID()) });
+        return sqlDB.update(getTableName(), values, "rowid = ?", new String[] { String.valueOf(review.getOid()) });
     }
 
     @Override
     public void delete(SkritterDatabaseHelper db, Review review) {
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        sqlDB.delete(getTableName(), ID + " = ?", new String[] { String.valueOf(review.getDatabaseID()) });
+        sqlDB.delete(getTableName(), "rowid = ?", new String[] { String.valueOf(review.getOid()) });
     }
 
     @Override
     public Review populateItem(Cursor cursor) {
         Review review = new Review();
 
-        review.setDatabaseID(cursor.getInt(cursor.getColumnIndex(ID)));
+        review.setOid(cursor.getLong(cursor.getColumnIndex(ROW_ID)));
         review.setItemID(cursor.getString(cursor.getColumnIndex(ITEM_ID)));
         review.setScore(cursor.getInt(cursor.getColumnIndex(SCORE)));
         review.setBearTime(cursor.getInt(cursor.getColumnIndex(BEAR_TIME)) == 1);
@@ -117,7 +115,6 @@ public class ReviewTable extends SkritterDatabaseTable<Review> {
     public ContentValues populateContentValues(Review review) {
         ContentValues values = new ContentValues();
 
-        values.put(ID, review.getDatabaseID());
         values.put(ITEM_ID, review.getItemID());
         values.put(SCORE, review.getScore());
         values.put(BEAR_TIME, review.isBearTime());

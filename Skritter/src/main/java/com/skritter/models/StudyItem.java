@@ -6,7 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class StudyItem extends SkritterObject {
-    private int databaseID;
     private String id;
     private String part; // can be rdng,rune,tone, or defn
     private String[] vocabIDs;
@@ -53,14 +52,6 @@ public class StudyItem extends SkritterObject {
                 e.printStackTrace();
             }
         }
-    }
-
-    public int getDatabaseID() {
-        return databaseID;
-    }
-
-    public void setDatabaseID(int databaseID) {
-        this.databaseID = databaseID;
     }
 
     public String getId() {

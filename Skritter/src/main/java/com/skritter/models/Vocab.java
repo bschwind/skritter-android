@@ -6,7 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Vocab extends SkritterObject {
-    private int databaseID;
     private String id;
     private String[] containedVocabIDs;
     private String language;
@@ -45,14 +44,6 @@ public class Vocab extends SkritterObject {
                 e.printStackTrace();
             }
         }
-    }
-
-    public int getDatabaseID() {
-        return databaseID;
-    }
-
-    public void setDatabaseID(int databaseID) {
-        this.databaseID = databaseID;
     }
 
     public String getId() {

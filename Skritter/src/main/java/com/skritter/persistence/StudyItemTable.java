@@ -6,11 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.skritter.models.StudyItem;
 
-/**
- * Created by bschwind on 10/29/13.
- */
 public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
-    private static final String ID = "id";
     private static final String STUDY_ITEM_ID = "study_item_id";
     private static final String PART = "part";
     private static final String VOCAB_IDS = "vocab_ids";
@@ -42,7 +38,6 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
     @Override
     public Column[] getColumns() {
         return new Column[] {
-                new Column(true, ID, Column.INTEGER_TYPE),
                 new Column(false, STUDY_ITEM_ID, Column.TEXT_TYPE),
                 new Column(false, PART, Column.TEXT_TYPE),
                 new Column(false, VOCAB_IDS, Column.TEXT_TYPE),
@@ -74,7 +69,7 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
 
     @Override
     public StudyItem read(SkritterDatabaseHelper db, long id) {
-        String selectQuery = "SELECT  * FROM " + getTableName() + " WHERE " + ID + " = " + id;
+        String selectQuery = "SELECT rowid, * FROM " + getTableName() + " WHERE rowid = " + id;
 
         SQLiteDatabase sqlDB = db.getReadableDatabase();
         Cursor cursor = sqlDB.rawQuery(selectQuery, null);
@@ -93,19 +88,20 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         ContentValues values = populateContentValues(studyItem);
 
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        return sqlDB.update(getTableName(), values, ID + " = ?", new String[] { String.valueOf(studyItem.getDatabaseID()) });
+        return sqlDB.update(getTableName(), values, "rowid = ?", new String[] { String.valueOf(studyItem.getOid()) });
     }
 
     @Override
     public void delete(SkritterDatabaseHelper db, StudyItem item) {
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        sqlDB.delete(getTableName(), ID + " = ?", new String[] { String.valueOf( item.getDatabaseID()) });
+        sqlDB.delete(getTableName(), "rowid = ?", new String[] { String.valueOf( item.getOid()) });
     }
 
     @Override
     public StudyItem populateItem(Cursor cursor) {
         StudyItem studyItem = new StudyItem();
 
+        studyItem.setOid(cursor.getLong(cursor.getColumnIndex(ROW_ID)));
         studyItem.setId(cursor.getString(cursor.getColumnIndex(STUDY_ITEM_ID)));
         studyItem.setVocabIDs(SkritterDatabaseHelper.convertCSVToArray(cursor.getString(cursor.getColumnIndex(VOCAB_IDS))));
         studyItem.setPart(cursor.getString(cursor.getColumnIndex(PART)));

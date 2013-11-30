@@ -7,9 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by bschwind on 10/29/13.
- */
 public abstract class SkritterDatabaseTable<T> {
     public static class Column {
         public static String NULL_TYPE = "NULL";
@@ -53,6 +50,7 @@ public abstract class SkritterDatabaseTable<T> {
         }
     }
 
+    protected static final String ROW_ID = "rowid";
     public abstract String getTableName();
     public abstract Column[] getColumns();
     public abstract T populateItem(Cursor cursor);
@@ -65,7 +63,7 @@ public abstract class SkritterDatabaseTable<T> {
 
     public List<T> getAllItems(SkritterDatabaseHelper db) {
         List<T> items = new ArrayList<T>();
-        String selectQuery = "SELECT  * FROM " + getTableName();
+        String selectQuery = "SELECT rowid, * FROM " + getTableName();
 
         SQLiteDatabase sqlDB = db.getReadableDatabase();
         Cursor cursor = sqlDB.rawQuery(selectQuery, null);

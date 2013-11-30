@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import com.skritter.models.Vocab;
 
 public class VocabTable extends SkritterDatabaseTable<Vocab> {
-    private static final String ID = "id";
     private static final String VOCAB_ID = "vocab_id";
     private static final String CONTAINED_VOCAB_IDS = "contained_vocab_ids";
     private static final String LANGUAGE = "language";
@@ -35,7 +34,6 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
     @Override
     public Column[] getColumns() {
         return new Column[] {
-                new Column(true, ID, Column.INTEGER_TYPE),
                 new Column(false, VOCAB_ID, Column.TEXT_TYPE),
                 new Column(false, CONTAINED_VOCAB_IDS, Column.TEXT_TYPE),
                 new Column(false, LANGUAGE, Column.TEXT_TYPE),
@@ -63,7 +61,7 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
 
     @Override
     public Vocab read(SkritterDatabaseHelper db, long id) {
-        String selectQuery = "SELECT  * FROM " + getTableName() + " WHERE " + ID + " = " + id;
+        String selectQuery = "SELECT rowid, * FROM " + getTableName() + " WHERE rowid = " + id;
 
         SQLiteDatabase sqlDB = db.getReadableDatabase();
         Cursor cursor = sqlDB.rawQuery(selectQuery, null);
@@ -78,7 +76,7 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
     }
 
     public Vocab getByStringID(SkritterDatabaseHelper db, String id) {
-        String selectQuery = "SELECT  * FROM " + getTableName() + " WHERE " + VOCAB_ID + " = '" + id + "'";
+        String selectQuery = "SELECT rowid, * FROM " + getTableName() + " WHERE " + VOCAB_ID + " = '" + id + "'";
 
         SQLiteDatabase sqlDB = db.getReadableDatabase();
         Cursor cursor = sqlDB.rawQuery(selectQuery, null);
@@ -97,19 +95,20 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
         ContentValues values = populateContentValues(vocab);
 
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        return sqlDB.update(getTableName(), values, ID + " = ?", new String[] { String.valueOf(vocab.getDatabaseID()) });
+        return sqlDB.update(getTableName(), values, "rowid = ?", new String[] { String.valueOf(vocab.getOid()) });
     }
 
     @Override
     public void delete(SkritterDatabaseHelper db, Vocab vocab) {
         SQLiteDatabase sqlDB = db.getWritableDatabase();
-        sqlDB.delete(getTableName(), ID + " = ?", new String[] { String.valueOf(vocab.getDatabaseID()) });
+        sqlDB.delete(getTableName(), "rowid = ?", new String[] { String.valueOf(vocab.getOid()) });
     }
 
     @Override
     public Vocab populateItem(Cursor cursor) {
         Vocab vocab = new Vocab();
 
+        vocab.setOid(cursor.getLong(cursor.getColumnIndex(ROW_ID)));
         vocab.setId(cursor.getString(cursor.getColumnIndex(VOCAB_ID)));
         vocab.setContainedVocabIDs(SkritterDatabaseHelper.convertCSVToArray(cursor.getString(cursor.getColumnIndex(CONTAINED_VOCAB_IDS))));
         vocab.setLanguage(cursor.getString(cursor.getColumnIndex(LANGUAGE)));

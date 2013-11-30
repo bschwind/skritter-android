@@ -4,7 +4,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Review extends SkritterObject {
-    private int databaseID;
     private String itemID;
     private int score;
     private boolean bearTime;
@@ -43,14 +42,6 @@ public class Review extends SkritterObject {
                 e.printStackTrace();
             }
         }
-    }
-
-    public int getDatabaseID() {
-        return databaseID;
-    }
-
-    public void setDatabaseID(int databaseID) {
-        this.databaseID = databaseID;
     }
 
     public String getItemID() {
