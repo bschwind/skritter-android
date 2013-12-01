@@ -8,15 +8,16 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
 
 import com.skritter.SkritterApplication;
+import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
 import com.skritter.models.Vocab;
 import com.skritter.persistence.SkritterDatabaseHelper;
+import com.skritter.persistence.StrokeDataTable;
 import com.skritter.persistence.VocabTable;
 import com.skritter.taskFragments.GetStudyItemsTaskFragment;
 import com.skritter.views.PromptCanvas;
@@ -46,31 +47,10 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         db = new SkritterDatabaseHelper(this);
 
         promptCanvas = (PromptCanvas) findViewById(R.id.canvas);
-        promptCanvas.setBackgroundColor(Color.WHITE);
-        promptCanvas.setPenColor(Color.BLACK);
-        promptCanvas.setGridColor(Color.GRAY);
         promptCanvas.setEventListener(new PromptCanvas.IGradingButtonListener() {
-
             @Override
             public void onGradingButtonPressed(int gradingButton) {
-                promptCanvas.setShouldDrawStatusBorder(true);
-                switch (gradingButton) {
-                    case 0:
-                        promptCanvas.setStatusBorderColor(Color.RED);
-                        break;
-                    case 1:
-                        promptCanvas.setStatusBorderColor(Color.YELLOW);
-                        break;
-                    case 2:
-                        promptCanvas.setStatusBorderColor(Color.GREEN);
-                        break;
-                    case 3:
-                        promptCanvas.setStatusBorderColor(Color.BLUE);
-                        break;
-                    default:
-                        break;
-                }
-//                onNext(null);
+                onGrade(gradingButton);
             }
         });
 
@@ -133,6 +113,31 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         progressDialog.show();
     }
 
+    public void onGrade(int gradingButton) {
+        promptCanvas.setShouldDrawStatusBorder(false);
+        switch (gradingButton) {
+            case 0:
+                promptCanvas.setStatusBorderColor(Color.RED);
+                break;
+            case 1:
+                promptCanvas.setStatusBorderColor(Color.YELLOW);
+                break;
+            case 2:
+                promptCanvas.setStatusBorderColor(Color.GREEN);
+                break;
+            case 3:
+                promptCanvas.setStatusBorderColor(Color.BLUE);
+                break;
+            default:
+                break;
+        }
+
+        // Populate review item and store in database
+        // Update relevant study items
+
+        onNext(null);
+    }
+
     public void onBack(View view) {
         currentIndex--;
         if (currentIndex < 0) {
@@ -167,7 +172,10 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         currentItem = itemsToStudy.get(currentIndex);
         String[] vocabIDs = currentItem.getVocabIDs();
 
-        Vocab vocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
+        Vocab vocab = null;
+        if (vocabIDs != null && vocabIDs.length > 0) {
+            vocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
+        }
 
         TextView text = (TextView) findViewById(R.id.itemDetails);
         text.setText(currentItem.getId());
@@ -175,7 +183,12 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         TextView timeText = (TextView) findViewById(R.id.itemTimes);
         timeText.setText("" + currentItem.getReviews());
 
-        promptCanvas.setStudyItemAndVocab(currentItem, vocab);
+        StrokeData strokeData = null;
+        if (currentItem.isRune() && vocab != null) {
+            strokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, vocab.getWriting().substring(vocab.getWriting().length()-1), vocab.getLanguage());
+        }
+
+        promptCanvas.setStudyItemAndVocab(currentItem, vocab, strokeData);
 
         updateText();
     }

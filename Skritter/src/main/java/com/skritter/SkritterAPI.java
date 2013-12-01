@@ -12,8 +12,11 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,8 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SkritterAPI {
-    private static String apiClientID = "bschwindapiclient";
-    private static String apiClientSecret = "c7e7251c01b830b8ed87ea4bb39fdd";
+//    private static String apiClientID = "bschwindapiclient";
+//    private static String apiClientSecret = "c7e7251c01b830b8ed87ea4bb39fdd";
+
+    private static String apiClientID = "mcfarljwapiclient";
+    private static String apiClientSecret = "e3872517fed90a820e441531548b8c";
 
     public static LoginStatus login(String username, String password) {
         LoginStatus loginStatus = new LoginStatus();
@@ -34,7 +40,7 @@ public class SkritterAPI {
             return loginStatus;
         }
 
-        String url = "http://www.skritter.com/api/v0/oauth2/token";
+        String url = "http://beta.skritter.com/api/v0/oauth2/token";
 
         AndroidHttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
         HttpPost httpPost = new HttpPost(url);
@@ -125,14 +131,186 @@ public class SkritterAPI {
         return jsonObject;
     }
 
+    public static JSONObject batchGetStudyItems(String accessToken) {
+        String url = "http://beta.skritter.com/api/v0/batch?";
+
+        JSONArray requestArray = new JSONArray();
+        JSONObject requestJSON = new JSONObject();
+        JSONObject params = new JSONObject();
+        try {
+            params.put("lang", "ja");
+            params.put("sort", "last"); // todo - This should be "next", but then strokes aren't included
+            params.put("include_vocabs", "true");
+            params.put("include_strokes", "true");
+            params.put("include_sentences", "true");
+            params.put("include_heisigs", "true");
+            params.put("include_top_mnemonics", "true");
+            params.put("include_decomps", "true");
+
+
+            requestJSON.put("path", "api/v0/items");
+            requestJSON.put("method", "GET");
+            requestJSON.put("cache", false);
+            requestJSON.put("params", params);
+            requestJSON.put("spawner", false); // todo - SET THIS TO TRUE, but "Item queries cannot be run in parallel"
+
+            requestArray.put(requestJSON);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<NameValuePair> bearerTokenNameValue = new ArrayList<NameValuePair>();
+        bearerTokenNameValue.add(new BasicNameValuePair("bearer_token", accessToken));
+
+        String paramString = URLEncodedUtils.format(bearerTokenNameValue, "utf-8");
+        url += paramString;
+
+        AndroidHttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
+
+        HttpPost httpPost = new HttpPost(url);
+
+        String credentials = apiClientID + ":" + apiClientSecret;
+        credentials = Base64.encodeToString(credentials.getBytes(), Base64.DEFAULT);
+        credentials = "basic " + credentials.trim();
+        httpPost.addHeader("AUTHORIZATION", credentials);
+
+        try {
+            httpPost.setEntity(new StringEntity(requestArray.toString()));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        String responseBody = "";
+
+        try {
+            ResponseHandler<String> responseHandler=new BasicResponseHandler();
+            responseBody = httpClient.execute(httpPost, responseHandler);
+        } catch (ClientProtocolException cpe) {
+            cpe.printStackTrace();
+            return null;
+        } catch (IOException io) {
+            io.printStackTrace();
+            return null;
+        } finally {
+            httpClient.close();
+        }
+
+        JSONObject jsonObject = NetworkUtils.getJsonObjectFromHTTPResponseBody(responseBody);
+
+        String statusCode = "";
+
+        if (jsonObject != null) {
+            statusCode = jsonObject.optString("statusCode");
+        }
+
+        if ("200".equals(statusCode)) {
+            JSONObject batch = jsonObject.optJSONObject("Batch");
+            int batchID = batch.optInt("id");
+
+            JSONObject returnJSON = new JSONObject();
+
+            while (true) {
+                JSONObject jsonBatch = getBatch(accessToken, batchID);
+
+                if (jsonBatch == null) {
+                    return returnJSON;
+                }
+
+                int runningBatches = jsonBatch.optJSONObject("Batch").optInt("runningRequests");
+                int numRequestsReady = jsonBatch.optJSONObject("Batch").optJSONArray("Requests").length();
+
+                if (runningBatches > 0 && numRequestsReady == 0) {
+                    try {
+                        Thread.sleep(2000);
+                        continue;
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                for (int i = 0; i < jsonBatch.optJSONObject("Batch").optJSONArray("Requests").length(); i++) {
+                    JSONObject response = jsonBatch.optJSONObject("Batch").optJSONArray("Requests").optJSONObject(i).optJSONObject("response");
+
+                    if (response == null) {
+                        continue;
+                    }
+                    try {
+                        returnJSON.accumulate("Items", response.optJSONArray("Items"));
+                        returnJSON.accumulate("Vocabs", response.optJSONArray("Vocabs"));
+                        returnJSON.accumulate("Sentences", response.optJSONArray("Sentences"));
+                        returnJSON.accumulate("Decomps", response.optJSONArray("Decomps"));
+                        returnJSON.accumulate("Strokes", response.optJSONArray("Strokes"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (runningBatches == 0) {
+                    break;
+                }
+            }
+
+            return returnJSON;
+        } else {
+            return null;
+        }
+    }
+
+    private static JSONObject getBatch(String accessToken, int batchID) {
+        String url = "http://beta.skritter.com/api/v0/batch/" + batchID + "?";
+
+        List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>();
+        nameValuePair.add(new BasicNameValuePair("bearer_token", accessToken));
+//        nameValuePair.add(new BasicNameValuePair("request_ids", "" + requestID));
+
+        String paramString = URLEncodedUtils.format(nameValuePair, "utf-8");
+        url += paramString;
+
+        AndroidHttpClient httpClient = AndroidHttpClient.newInstance("androidSkritter");
+        HttpGet httpGet = new HttpGet(url);
+
+        String responseBody = "";
+
+        try {
+            ResponseHandler<String> responseHandler=new BasicResponseHandler();
+            responseBody = httpClient.execute(httpGet, responseHandler);
+        } catch (ClientProtocolException cpe) {
+            cpe.printStackTrace();
+            return null;
+        } catch (IOException io) {
+            io.printStackTrace();
+            return null;
+        } finally {
+            httpClient.close();
+        }
+
+        JSONObject jsonObject = NetworkUtils.getJsonObjectFromHTTPResponseBody(responseBody);
+
+        String statusCode = "";
+
+        if (jsonObject != null) {
+            statusCode = jsonObject.optString("statusCode");
+        }
+
+        if ("200".equals(statusCode)) {
+            return jsonObject;
+        } else {
+            return null;
+        }
+    }
+
     private static JSONObject fetchStudyItemsWithCursor(String accessToken, String cursor) {
-        String url = "http://www.skritter.com/api/v0/items?";
+        String url = "http://beta.skritter.com/api/v0/items?";
 
         List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>();
         nameValuePair.add(new BasicNameValuePair("sort", "next"));
         nameValuePair.add(new BasicNameValuePair("bearer_token", accessToken));
         nameValuePair.add(new BasicNameValuePair("include_vocabs", "true"));
         nameValuePair.add(new BasicNameValuePair("include_strokes", "true"));
+        nameValuePair.add(new BasicNameValuePair("include_sentences", "true"));
+        nameValuePair.add(new BasicNameValuePair("include_heisigs", "true"));
+        nameValuePair.add(new BasicNameValuePair("include_top_mnemonics", "true"));
         nameValuePair.add(new BasicNameValuePair("include_decomps", "true"));
         nameValuePair.add(new BasicNameValuePair("gzip", "false"));
 

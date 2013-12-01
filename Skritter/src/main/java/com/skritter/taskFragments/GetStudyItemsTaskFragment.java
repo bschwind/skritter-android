@@ -6,9 +6,11 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
 import com.skritter.SkritterAPI;
+import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
 import com.skritter.models.Vocab;
 import com.skritter.persistence.SkritterDatabaseHelper;
+import com.skritter.persistence.StrokeDataTable;
 import com.skritter.persistence.StudyItemTable;
 import com.skritter.persistence.VocabTable;
 
@@ -132,7 +134,7 @@ public class GetStudyItemsTaskFragment extends Fragment {
 
             String accessToken = params[0];
 
-            JSONObject recentItemsJSON = SkritterAPI.fetchRecentItems(accessToken);
+            JSONObject recentItemsJSON = SkritterAPI.batchGetStudyItems(accessToken);
 
             if (recentItemsJSON == null) {
                 return studyItems;
@@ -162,6 +164,16 @@ public class GetStudyItemsTaskFragment extends Fragment {
                 Vocab vocab = new Vocab(vocabJSONObject);
 
                 VocabTable.getInstance().create(db, vocab);
+            }
+
+            // Populate Strokes which were included in the study item response
+            JSONArray strokeJSONArray = response.optJSONArray("Strokes");
+
+            for (int i = 0; i < strokeJSONArray.length(); i++) {
+                JSONObject strokeJSONObject = strokeJSONArray.optJSONObject(i);
+                StrokeData strokeData = new StrokeData(strokeJSONObject);
+
+                StrokeDataTable.getInstance().create(db, strokeData);
             }
         }
 
