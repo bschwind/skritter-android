@@ -73,6 +73,10 @@ public class StrokeDataTable extends SkritterDatabaseTable<StrokeData> {
             cursor.moveToFirst();
         }
 
+        if (cursor.getCount() == 0) {
+            return null;
+        }
+
         StrokeData strokeData = populateItem(cursor);
 
         return strokeData;

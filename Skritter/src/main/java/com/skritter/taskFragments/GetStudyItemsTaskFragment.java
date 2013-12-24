@@ -15,9 +15,11 @@ import com.skritter.persistence.StudyItemTable;
 import com.skritter.persistence.VocabTable;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -134,13 +136,7 @@ public class GetStudyItemsTaskFragment extends Fragment {
 
             String accessToken = params[0];
 
-            JSONObject recentItemsJSON = SkritterAPI.batchGetStudyItems(accessToken);
-
-            if (recentItemsJSON == null) {
-                return studyItems;
-            }
-
-            populateDBWithJSONItems(db, recentItemsJSON);
+            SkritterAPI.batchGetAndStoreStudyItems(accessToken, db);
 
             return StudyItemTable.getInstance().getAllItems(db);
         }

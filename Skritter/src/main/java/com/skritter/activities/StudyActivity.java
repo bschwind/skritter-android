@@ -15,14 +15,18 @@ import android.widget.TextView;
 import com.skritter.SkritterApplication;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
+import com.skritter.models.Vector2;
 import com.skritter.models.Vocab;
 import com.skritter.persistence.SkritterDatabaseHelper;
 import com.skritter.persistence.StrokeDataTable;
 import com.skritter.persistence.VocabTable;
 import com.skritter.taskFragments.GetStudyItemsTaskFragment;
+import com.skritter.utils.ShortStraw;
+import com.skritter.utils.StringUtil;
 import com.skritter.views.PromptCanvas;
 import com.skritter.R;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class StudyActivity extends FragmentActivity implements GetStudyItemsTaskFragment.TaskCallbacks {
@@ -31,6 +35,7 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     private ProgressDialog progressDialog;
     private List<StudyItem> itemsToStudy;
     private int currentIndex = 0;
+    private int currentRuneIndex = 0;
     private StudyItem currentItem;
     private SkritterDatabaseHelper db;
 
@@ -51,6 +56,13 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             @Override
             public void onGradingButtonPressed(int gradingButton) {
                 onGrade(gradingButton);
+            }
+        });
+
+        promptCanvas.setEventListener(new PromptCanvas.IStrokeListener() {
+            @Override
+            public void onNewStroke(Vector2[] strokePoints, int numPoints) {
+                onStroke(strokePoints, numPoints);
             }
         });
 
@@ -113,7 +125,7 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         progressDialog.show();
     }
 
-    public void onGrade(int gradingButton) {
+    private void onGrade(int gradingButton) {
         promptCanvas.setShouldDrawStatusBorder(false);
         switch (gradingButton) {
             case 0:
@@ -138,13 +150,21 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         onNext(null);
     }
 
-    public void onBack(View view) {
-        currentIndex--;
-        if (currentIndex < 0) {
-            currentIndex = 0;
+    private void onStroke(Vector2[] points, int numPoints) {
+        Vector2[] corners = ShortStraw.runShortStraw(points, numPoints);
+        Vector2 startPoint = new Vector2(0, 0);
+        for (int i = 0; i < corners.length; i++) {
+            startPoint.x += corners[i].x;
+            startPoint.y += corners[i].y;
         }
 
-        updateCurrentIndex();
+        startPoint.x /= corners.length;
+        startPoint.y /= corners.length;
+        promptCanvas.drawNextStroke(startPoint);
+    }
+
+    public void onBack(View view) {
+        updateCurrentIndex(false);
     }
 
     public void onErase(View view) {
@@ -160,16 +180,68 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     }
 
     public void onNext(View view) {
-        currentIndex++;
-        if (currentIndex >= itemsToStudy.size()) {
-            currentIndex = itemsToStudy.size() - 1;
-        }
-
-        updateCurrentIndex();
+        updateCurrentIndex(true);
     }
 
-    private void updateCurrentIndex() {
+    private void updateCurrentIndex(boolean forward) {
         currentItem = itemsToStudy.get(currentIndex);
+
+        if (currentItem.isRune()) {
+            // Check which character we're on, and move to the next character
+            // if there are any left. Otherwise, go to the next StudyItem
+            String[] vocabIDs = currentItem.getVocabIDs();
+
+            Vocab vocab = null;
+            if (vocabIDs != null && vocabIDs.length > 0) {
+                vocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
+            }
+
+            boolean shouldMoveToNextItem = false;
+            if (vocab != null) {
+                int writingLength = StringUtil.filterOutNonKanji(vocab.getWriting()).length();
+                if (forward && currentRuneIndex < writingLength - 1) {
+                    currentRuneIndex++;
+                } else if (!forward && currentRuneIndex > 0) {
+                    currentRuneIndex--;
+                } else {
+                    shouldMoveToNextItem = true;
+                    currentRuneIndex = 0;
+                }
+            } else {
+                shouldMoveToNextItem = true;
+            }
+
+            if (forward && shouldMoveToNextItem) {
+                currentIndex++;
+                if (currentIndex >= itemsToStudy.size()) {
+                    currentIndex = itemsToStudy.size() - 1;
+                }
+            } else if (shouldMoveToNextItem) {
+                currentIndex--;
+                if (currentIndex < 0) {
+                    currentIndex = 0;
+                }
+            }
+        } else {
+            if (forward) {
+                currentIndex++;
+                if (currentIndex >= itemsToStudy.size()) {
+                    currentIndex = itemsToStudy.size() - 1;
+                }
+            } else {
+                currentIndex--;
+                if (currentIndex < 0) {
+                    currentIndex = 0;
+                }
+            }
+        }
+
+        updateCurrentItem();
+    }
+
+    private void updateCurrentItem() {
+        currentItem = itemsToStudy.get(currentIndex);
+
         String[] vocabIDs = currentItem.getVocabIDs();
 
         Vocab vocab = null;
@@ -185,7 +257,8 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
 
         StrokeData strokeData = null;
         if (currentItem.isRune() && vocab != null) {
-            strokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, vocab.getWriting().substring(vocab.getWriting().length()-1), vocab.getLanguage());
+            String kanjiOnly = StringUtil.filterOutNonKanji(vocab.getWriting());
+            strokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, kanjiOnly.substring(currentRuneIndex, currentRuneIndex + 1), vocab.getLanguage());
         }
 
         promptCanvas.setStudyItemAndVocab(currentItem, vocab, strokeData);
@@ -221,7 +294,21 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             // We've got problems....try and re-fetch?
         }
 
-        updateCurrentIndex();
+        // Get rid of items that don't have an associated vocab, for now
+        Iterator<StudyItem> iterator = itemsToStudy.iterator();
+
+        while (iterator.hasNext()) {
+            StudyItem item = iterator.next();
+
+            String[] vocabIDs = item.getVocabIDs();
+
+            Vocab vocab = null;
+            if (vocabIDs == null || vocabIDs.length == 0) {
+                iterator.remove();
+            }
+        }
+
+        updateCurrentItem();
 
         if (progressDialog != null) {
             progressDialog.dismiss();

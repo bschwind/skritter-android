@@ -2,8 +2,16 @@ package com.skritter;
 
 import android.net.http.AndroidHttpClient;
 import android.util.Base64;
+import android.util.Log;
 
 import com.skritter.models.LoginStatus;
+import com.skritter.models.StrokeData;
+import com.skritter.models.StudyItem;
+import com.skritter.models.Vocab;
+import com.skritter.persistence.SkritterDatabaseHelper;
+import com.skritter.persistence.StrokeDataTable;
+import com.skritter.persistence.StudyItemTable;
+import com.skritter.persistence.VocabTable;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -131,15 +139,16 @@ public class SkritterAPI {
         return jsonObject;
     }
 
-    public static JSONObject batchGetStudyItems(String accessToken) {
+    public static void batchGetAndStoreStudyItems(String accessToken, SkritterDatabaseHelper db) {
         String url = "http://beta.skritter.com/api/v0/batch?";
 
         JSONArray requestArray = new JSONArray();
         JSONObject requestJSON = new JSONObject();
         JSONObject params = new JSONObject();
         try {
-            params.put("lang", "ja");
-            params.put("sort", "last"); // todo - This should be "next", but then strokes aren't included
+//            params.put("lang", "ja");
+            params.put("sort", "changed"); // todo - This should be "next", but then strokes aren't included
+            params.put("offset", 0);
             params.put("include_vocabs", "true");
             params.put("include_strokes", "true");
             params.put("include_sentences", "true");
@@ -150,9 +159,8 @@ public class SkritterAPI {
 
             requestJSON.put("path", "api/v0/items");
             requestJSON.put("method", "GET");
-            requestJSON.put("cache", false);
             requestJSON.put("params", params);
-            requestJSON.put("spawner", false); // todo - SET THIS TO TRUE, but "Item queries cannot be run in parallel"
+            requestJSON.put("spawner", true); // todo - SET THIS TO TRUE, but "Item queries cannot be run in parallel"
 
             requestArray.put(requestJSON);
         } catch (JSONException e) {
@@ -178,7 +186,7 @@ public class SkritterAPI {
             httpPost.setEntity(new StringEntity(requestArray.toString()));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-            return null;
+            return;
         }
 
         String responseBody = "";
@@ -188,10 +196,10 @@ public class SkritterAPI {
             responseBody = httpClient.execute(httpPost, responseHandler);
         } catch (ClientProtocolException cpe) {
             cpe.printStackTrace();
-            return null;
+            return;
         } catch (IOException io) {
             io.printStackTrace();
-            return null;
+            return;
         } finally {
             httpClient.close();
         }
@@ -208,13 +216,11 @@ public class SkritterAPI {
             JSONObject batch = jsonObject.optJSONObject("Batch");
             int batchID = batch.optInt("id");
 
-            JSONObject returnJSON = new JSONObject();
-
             while (true) {
                 JSONObject jsonBatch = getBatch(accessToken, batchID);
 
                 if (jsonBatch == null) {
-                    return returnJSON;
+                    return;
                 }
 
                 int runningBatches = jsonBatch.optJSONObject("Batch").optInt("runningRequests");
@@ -235,25 +241,95 @@ public class SkritterAPI {
                     if (response == null) {
                         continue;
                     }
-                    try {
-                        returnJSON.accumulate("Items", response.optJSONArray("Items"));
-                        returnJSON.accumulate("Vocabs", response.optJSONArray("Vocabs"));
-                        returnJSON.accumulate("Sentences", response.optJSONArray("Sentences"));
-                        returnJSON.accumulate("Decomps", response.optJSONArray("Decomps"));
-                        returnJSON.accumulate("Strokes", response.optJSONArray("Strokes"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+
+                    populateDBWithJSONItems(db, response);
                 }
 
                 if (runningBatches == 0) {
                     break;
                 }
             }
+        }
+    }
 
-            return returnJSON;
-        } else {
-            return null;
+    private static void populateDBWithJSONItems(SkritterDatabaseHelper db, JSONObject response) {
+        populateItems(db, response);
+        populateVocab(db, response);
+        populateStrokes(db, response);
+    }
+
+    private static void populateItems(SkritterDatabaseHelper db, JSONObject response) {
+        // Populate study items from the response
+        JSONArray studyItemJSONArray = response.optJSONArray("Items");
+
+        if (studyItemJSONArray == null || studyItemJSONArray.length() == 0) {
+            return;
+        }
+
+        for (int i = 0; i < studyItemJSONArray.length(); i++) {
+            JSONObject studyItemJSONObject = studyItemJSONArray.optJSONObject(i);
+
+            if (studyItemJSONObject == null) {
+                continue;
+            }
+
+            StudyItem item = new StudyItem(studyItemJSONObject);
+
+            if (item == null) {
+                continue;
+            }
+
+            StudyItemTable.getInstance().create(db, item);
+        }
+    }
+
+    private static void populateVocab(SkritterDatabaseHelper db, JSONObject response) {
+        // Populate Vocabs which were included in the study item response
+        JSONArray vocabJSONArray = response.optJSONArray("Vocabs");
+
+        if (vocabJSONArray == null || vocabJSONArray.length() == 0) {
+            return;
+        }
+
+        for (int i = 0; i < vocabJSONArray.length(); i++) {
+            JSONObject vocabJSONObject = vocabJSONArray.optJSONObject(i);
+
+            if (vocabJSONObject == null) {
+                continue;
+            }
+
+            Vocab vocab = new Vocab(vocabJSONObject);
+
+            if (vocab == null) {
+                continue;
+            }
+
+            VocabTable.getInstance().create(db, vocab);
+        }
+    }
+
+    private static void populateStrokes(SkritterDatabaseHelper db, JSONObject response) {
+        // Populate Strokes which were included in the study item response
+        JSONArray strokeJSONArray = response.optJSONArray("Strokes");
+
+        if (strokeJSONArray == null || strokeJSONArray.length() == 0) {
+            return;
+        }
+
+        for (int i = 0; i < strokeJSONArray.length(); i++) {
+            JSONObject strokeJSONObject = strokeJSONArray.optJSONObject(i);
+
+            if (strokeJSONObject == null) {
+                continue;
+            }
+
+            StrokeData strokeData = new StrokeData(strokeJSONObject);
+
+            if (strokeData == null) {
+                continue;
+            }
+
+            StrokeDataTable.getInstance().create(db, strokeData);
         }
     }
 

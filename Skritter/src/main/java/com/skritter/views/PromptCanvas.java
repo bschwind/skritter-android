@@ -10,6 +10,7 @@ import android.view.View;
 
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
+import com.skritter.models.Vector2;
 import com.skritter.models.Vocab;
 
 import java.util.HashMap;
@@ -24,6 +25,16 @@ public class PromptCanvas extends View {
 
     public void setEventListener(IGradingButtonListener gradingButtonListener) {
         this.gradingButtonListener = gradingButtonListener;
+    }
+
+    public interface IStrokeListener {
+        public void onNewStroke(Vector2[] strokePoints, int numPoints);
+    }
+
+    private IStrokeListener strokeListener;
+
+    public void setEventListener(IStrokeListener strokeListener) {
+        this.strokeListener = strokeListener;
     }
 
     // The different Paint styles for drawing the canvas elements
@@ -52,7 +63,9 @@ public class PromptCanvas extends View {
 
     private void setDefaults() {
         studyItemPanelMap = new HashMap<String, StudyItemPanel>();
-        studyItemPanelMap.put("rune", new RuneItemPanel());
+        
+        RuneItemPanel runePanel = new RuneItemPanel();
+        studyItemPanelMap.put("rune", runePanel);
         studyItemPanelMap.put("rdng", new ReadingItemPanel());
         studyItemPanelMap.put("defn", new DefinitionItemPanel());
 
@@ -65,11 +78,23 @@ public class PromptCanvas extends View {
             });
         }
 
+        runePanel.setEventListener(new RuneItemPanel.IStrokeListener() {
+            @Override
+            public void onNewStroke(Vector2[] strokePoints, int numPoints) {
+                onStroke(strokePoints, numPoints);
+            }
+        });
+
         statusBorderPaint = new Paint();
         statusBorderPaint.setAntiAlias(true);
         statusBorderPaint.setColor(Color.GREEN);
         statusBorderPaint.setStyle(Paint.Style.STROKE);
         statusBorderPaint.setStrokeWidth(6);
+    }
+
+    public void drawNextStroke(Vector2 startPoint) {
+        RuneItemPanel runeItemPanel = (RuneItemPanel)studyItemPanelMap.get("rune");
+        runeItemPanel.drawNextStroke(startPoint);
     }
 
     protected void onDraw(Canvas canvas) {
@@ -80,6 +105,8 @@ public class PromptCanvas extends View {
         if (shouldDrawStatusBorder) {
             drawStatusBorder(canvas);
         }
+
+        this.postInvalidateDelayed(1000 / 60);
     }
 
     private void drawStatusBorder(Canvas canvas) {
@@ -169,9 +196,15 @@ public class PromptCanvas extends View {
         }
     }
 
-    public void onGrade(int gradingButton) {
+    private void onGrade(int gradingButton) {
         if (gradingButtonListener != null) {
             gradingButtonListener.onGradingButtonPressed(gradingButton);
+        }
+    }
+
+    private void onStroke(Vector2[] points, int numPoints) {
+        if (strokeListener != null) {
+            strokeListener.onNewStroke(points, numPoints);
         }
     }
 
