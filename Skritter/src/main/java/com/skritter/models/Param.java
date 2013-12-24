@@ -1,13 +1,14 @@
 package com.skritter.models;
 
 public class Param {
-    private int bitmapID;
-    private Vector2[] corners;
-    private Vector2[] deviations;
-    private int[] containedStrokes;
-    private String feedback;
+    public int bitmapID;
+    public Vector2[] corners;
+    public Vector2[] deviations;
+    public int[] containedStrokes;
+    public String feedback;
 
     public Param(int bitmapID, Vector2[] corners, Vector2[] deviations, int[] containedStrokes, String feedback) {
+        this.bitmapID = bitmapID;
         this.corners = corners;
         this.deviations = deviations;
         this.containedStrokes = containedStrokes;
@@ -411,5 +412,4 @@ public class Param {
             new Param(386, new Vector2[]{new Vector2(25, 24), new Vector2(289, 289)}, new Vector2[]{new Vector2(112, 17)}, null, null),
             new Param(387, new Vector2[]{new Vector2(26, 15), new Vector2(56, 55)}, new Vector2[]{new Vector2(29, 1)}, null, null)
     };
-
 }
