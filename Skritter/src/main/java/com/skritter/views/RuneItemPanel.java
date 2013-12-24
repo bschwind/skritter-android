@@ -174,9 +174,9 @@ public class RuneItemPanel extends StudyItemPanel {
 
             Stroke stroke = strokeData.getStrokes()[i];
             float x = stroke.x * customWidth;
-            x = MathUtil.easeInOutExpo(renderData.t, renderData.position.x, x - renderData.position.x, animationTime);
+            x = MathUtil.easeInOutCubic(renderData.t, renderData.position.x, x - renderData.position.x, animationTime);
             float y = stroke.y * customHeight;
-            y = MathUtil.easeInOutExpo(renderData.t, renderData.position.y, y - renderData.position.y, animationTime);
+            y = MathUtil.easeInOutCubic(renderData.t, renderData.position.y, y - renderData.position.y, animationTime);
 
             float scaleX = (stroke.width * customWidth) / strokeBitmaps[i].getWidth();
             float scaleY = (stroke.height * customHeight) / strokeBitmaps[i].getHeight();
