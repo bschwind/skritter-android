@@ -92,9 +92,9 @@ public class PromptCanvas extends View {
         statusBorderPaint.setStrokeWidth(6);
     }
 
-    public void drawNextStroke(Vector2 startPoint) {
+    public void drawNextStroke(Vector2 startPoint, float startAngle) {
         RuneItemPanel runeItemPanel = (RuneItemPanel)studyItemPanelMap.get("rune");
-        runeItemPanel.drawNextStroke(startPoint);
+        runeItemPanel.drawNextStroke(startPoint, startAngle);
     }
 
     protected void onDraw(Canvas canvas) {

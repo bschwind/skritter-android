@@ -128,7 +128,7 @@ public class RuneItemPanel extends StudyItemPanel {
         strokeCanvas = new Canvas(strokeBitmap);
     }
 
-    public void drawNextStroke(Vector2 startPoint) {
+    public void drawNextStroke(Vector2 startPoint, float startAngle) {
         if (strokeRenderData == null) {
             return;
         }
@@ -137,6 +137,24 @@ public class RuneItemPanel extends StudyItemPanel {
             if (!strokeRenderData[i].hasBeenDrawn) {
                 strokeRenderData[i].hasBeenDrawn = true;
                 strokeRenderData[i].position = startPoint;
+                strokeRenderData[i].rotation = (float)(startAngle * (180.0f / (Math.PI)));
+
+                float targetAngle = 0.0f;
+
+                for (int j = 0; j < Param.params.length; j++) {
+                    if (Param.params[j].bitmapID == strokeRenderData[i].bitmapID) {
+                        Vector2 start = Param.params[j].corners[0];
+                        Vector2 end = Param.params[j].corners[Param.params[j].corners.length-1];
+
+                        Vector2 dir = new Vector2(end.x - start.x, end.y - start.y);
+                        targetAngle = Vector2.angleBetweenVectors(new Vector2(1.0f, 0.0f), dir);
+                        targetAngle = (float)(targetAngle * (180.0f / (Math.PI)));
+                        break;
+                    }
+                }
+
+                strokeRenderData[i].rotation = strokeRenderData[i].rotation - targetAngle;
+                
                 return;
             }
         }
@@ -182,7 +200,7 @@ public class RuneItemPanel extends StudyItemPanel {
             float scaleY = (stroke.height * customHeight) / strokeBitmaps[i].getHeight();
 
             float rotation = -stroke.rotation;
-            rotation = MathUtil.lerp(renderData.rotation, rotation, lerpFactor);
+            rotation = MathUtil.easeInOutCubic(renderData.t, renderData.rotation, rotation - renderData.rotation, animationTime);
 
             Matrix matrix = new Matrix();
             // Move the bitmap so we can rotate and scale around the center of the image

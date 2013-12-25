@@ -13,6 +13,7 @@ import android.view.Window;
 import android.widget.TextView;
 
 import com.skritter.SkritterApplication;
+import com.skritter.math.BoundingBox;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
 import com.skritter.math.Vector2;
@@ -153,14 +154,22 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     private void onStroke(Vector2[] points, int numPoints) {
         Vector2[] corners = ShortStraw.runShortStraw(points, numPoints);
         Vector2 startPoint = new Vector2(0, 0);
-        for (int i = 0; i < corners.length; i++) {
-            startPoint.x += corners[i].x;
-            startPoint.y += corners[i].y;
+        float startAngle = 0.0f;
+        
+        if (corners.length > 1) {
+            Vector2 start = corners[0];
+            Vector2 end = corners[corners.length-1];
+            
+            Vector2 dir = new Vector2(end.x - start.x, end.y - start.y);
+            startAngle = Vector2.angleBetweenVectors(new Vector2(1.0f, 0.0f), dir);
         }
-
-        startPoint.x /= corners.length;
-        startPoint.y /= corners.length;
-        promptCanvas.drawNextStroke(startPoint);
+        
+        BoundingBox box = BoundingBox.getBounds(corners, corners.length);
+        
+        startPoint.x = box.x;
+        startPoint.y = box.y;
+        
+        promptCanvas.drawNextStroke(startPoint, startAngle);
     }
 
     public void onBack(View view) {
