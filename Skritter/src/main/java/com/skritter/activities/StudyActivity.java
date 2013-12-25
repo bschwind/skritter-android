@@ -15,7 +15,7 @@ import android.widget.TextView;
 import com.skritter.SkritterApplication;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
-import com.skritter.models.Vector2;
+import com.skritter.math.Vector2;
 import com.skritter.models.Vocab;
 import com.skritter.persistence.SkritterDatabaseHelper;
 import com.skritter.persistence.StrokeDataTable;

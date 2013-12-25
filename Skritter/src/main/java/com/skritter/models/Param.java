@@ -1,5 +1,7 @@
 package com.skritter.models;
 
+import com.skritter.math.Vector2;
+
 public class Param {
     public int bitmapID;
     public Vector2[] corners;

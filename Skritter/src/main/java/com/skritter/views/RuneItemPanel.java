@@ -13,8 +13,8 @@ import android.graphics.PorterDuff;
 
 import com.skritter.models.Param;
 import com.skritter.models.Stroke;
-import com.skritter.models.Vector2;
-import com.skritter.utils.MathUtil;
+import com.skritter.math.Vector2;
+import com.skritter.math.MathUtil;
 import com.skritter.utils.ShortStraw;
 
 import java.io.IOException;
@@ -273,5 +273,9 @@ public class RuneItemPanel extends StudyItemPanel {
         for (int i = 0; i < newCorners.length; i++) {
             corners.add(newCorners[i]);
         }
+    }
+    
+    public void clear() {
+        strokeCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
     }
 }

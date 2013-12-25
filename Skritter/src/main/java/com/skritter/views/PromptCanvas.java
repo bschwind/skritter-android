@@ -10,7 +10,7 @@ import android.view.View;
 
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
-import com.skritter.models.Vector2;
+import com.skritter.math.Vector2;
 import com.skritter.models.Vocab;
 
 import java.util.HashMap;

@@ -1,24 +1,13 @@
 package com.skritter.utils;
 
-import com.skritter.models.Vector2;
+import com.skritter.math.BoundingBox;
+import com.skritter.math.MathUtil;
+import com.skritter.math.Vector2;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShortStraw {
-    private static class BoundingBox {
-        public float x, y;
-        public float width, height;
-
-        public BoundingBox(float x, float y, float width, float height) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-        }
-    }
-
     private static Vector2[] resampledPoints = new Vector2[1024];
 
     private static final float diagonalInterval = 40.0f;
@@ -26,39 +15,9 @@ public class ShortStraw {
     private static final float medianThreshold = 0.95f;
     private static final float lineThreshold = 0.95f;
 
-    private static BoundingBox getBounds(Vector2[] points, int numPoints) {
-        if (points.length == 0 || numPoints == 0) {
-            return new BoundingBox(0, 0, 0, 0);
-        }
-
-        float minX = Float.POSITIVE_INFINITY;
-        float minY = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY;
-        float maxY = Float.NEGATIVE_INFINITY;
-
-        for (int i = 0; i < numPoints; i++) {
-            Vector2 p = points[i];
-
-            if (p.x < minX) {
-                minX = p.x;
-            }
-            if (p.y < minY) {
-                minY = p.y;
-            }
-            if (p.x > maxX) {
-                maxX = p.x;
-            }
-            if (p.y > maxY) {
-                maxY = p.y;
-            }
-        }
-
-        return new BoundingBox(minX, minY, maxX - minX, maxY - minY);
-    }
-
     private static float determineResampleSpacing(Vector2[] points, int numPoints) {
-        BoundingBox box = getBounds(points, numPoints);
-        float diagonalDistance = MathUtil.distance(new Vector2(box.x, box.y), new Vector2(box.x + box.width, box.y + box.height));
+        BoundingBox box = BoundingBox.getBounds(points, numPoints);
+        float diagonalDistance = Vector2.distance(new Vector2(box.x, box.y), new Vector2(box.x + box.width, box.y + box.height));
 
         return diagonalDistance / diagonalInterval;
     }
@@ -80,7 +39,7 @@ public class ShortStraw {
         for (int i = 1; i < pointsList.size(); i++) {
             Vector2 p1 = pointsList.get(i-1);
             Vector2 p2 = pointsList.get(i);
-            float currentDist = MathUtil.distance(p1, p2);
+            float currentDist = Vector2.distance(p1, p2);
             if (distance + currentDist >= s) {
                 float qx = p1.x + ((s - distance) / currentDist) * (p2.x - p1.x);
                 float qy = p1.y + ((s - distance) / currentDist) * (p2.y - p1.y);
@@ -109,7 +68,7 @@ public class ShortStraw {
         float[] straws = new float[numPoints];
 
         for (int i = strawWindow; i < numPoints - strawWindow; i++) {
-            straws[i] = MathUtil.distance(points[i-strawWindow], points[i+strawWindow]);
+            straws[i] = Vector2.distance(points[i-strawWindow], points[i+strawWindow]);
         }
 
         float t = MathUtil.median(straws) * medianThreshold;
@@ -200,7 +159,7 @@ public class ShortStraw {
     }
 
     private static boolean isLine(Vector2[] points, int a, int b) {
-        float distance = MathUtil.distance(points[a], points[b]);
+        float distance = Vector2.distance(points[a], points[b]);
         float pathDistance = pathDistance(points, a, b);
         return (distance / pathDistance) > lineThreshold;
     }
@@ -208,7 +167,7 @@ public class ShortStraw {
     private static float pathDistance(Vector2[] points, int a, int b) {
         float d = 0.0f;
         for (int i = a; i < b; i++) {
-            d += MathUtil.distance(points[i], points[i+1]);
+            d += Vector2.distance(points[i], points[i+1]);
         }
 
         return d;

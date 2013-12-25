@@ -1,18 +1,10 @@
-package com.skritter.utils;
-
-import com.skritter.models.Vector2;
+package com.skritter.math;
 
 import java.util.Arrays;
 
 public class MathUtil {
     public static float lerp(float a, float b, float t) {
         return a + (b-a) * t;
-    }
-
-    public static float distance(Vector2 v1, Vector2 v2) {
-        float x = v2.x - v1.x;
-        float y = v2.y - v1.y;
-        return (float)Math.sqrt((x * x) + (y * y));
     }
 
     public static float median(float[] numbers) {
