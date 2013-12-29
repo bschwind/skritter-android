@@ -27,6 +27,7 @@ import com.skritter.utils.StringUtil;
 import com.skritter.views.PromptCanvas;
 import com.skritter.R;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -161,7 +162,12 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             Vector2 end = corners[corners.length-1];
             
             Vector2 dir = new Vector2(end.x - start.x, end.y - start.y);
-            startAngle = Vector2.angleBetweenVectors(new Vector2(1.0f, 0.0f), dir);
+            
+            if (Vector2.length(dir) < 0.0001f) {
+                startAngle = 0.0f;
+            } else {
+                startAngle = Vector2.angleBetweenVectors(new Vector2(1.0f, 0.0f), dir);
+            }
         }
         
         BoundingBox box = BoundingBox.getBounds(corners, corners.length);
