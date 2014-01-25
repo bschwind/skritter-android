@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import com.skritter.models.Stroke;
 import com.skritter.models.StrokeData;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class StrokeDataTable extends SkritterDatabaseTable<StrokeData> {
     private static final String RUNE = "rune";
     private static final String LANGUAGE = "language";
@@ -16,6 +19,7 @@ public class StrokeDataTable extends SkritterDatabaseTable<StrokeData> {
     // These are just arbitrary separators to separate numbers, and groups of these numbers
     private static final String numberSeparator = "\t";
     private static final String strokeSeparator = ";";
+    private static final String variationSeparator = "@";
 
     private static final StrokeDataTable strokeDataTable = new StrokeDataTable();
 
@@ -105,24 +109,39 @@ public class StrokeDataTable extends SkritterDatabaseTable<StrokeData> {
         strokeData.setLanguage(cursor.getString(cursor.getColumnIndex(LANGUAGE)));
 
         String strokesString = cursor.getString(cursor.getColumnIndex(STROKES));
-        String[] strokeArray = strokesString.split(strokeSeparator);
+        String[] strokeVariations = strokesString.split(variationSeparator);
+        
+        List<Stroke[]> allStrokeVariations = new ArrayList<Stroke[]>();
+        
+        for (int j = 0; j < strokeVariations.length; j++) {
+            String[] strokeArray = strokeVariations[j].split(strokeSeparator);
 
-        Stroke[] strokes = new Stroke[strokeArray.length];
-        for (int i = 0; i < strokeArray.length; i++) {
-            String[] numbers = strokeArray[i].split(numberSeparator);
+            Stroke[] strokes = new Stroke[strokeArray.length];
+            for (int i = 0; i < strokeArray.length; i++) {
+                String[] numbers = strokeArray[i].split(numberSeparator);
 
-            Stroke newStroke = new Stroke();
-            newStroke.strokeID = Integer.parseInt(numbers[0]);
-            newStroke.x = Float.parseFloat(numbers[1]);
-            newStroke.y = Float.parseFloat(numbers[2]);
-            newStroke.width = Float.parseFloat(numbers[3]);
-            newStroke.height = Float.parseFloat(numbers[4]);
-            newStroke.rotation = Float.parseFloat(numbers[5]);
+                Stroke newStroke = new Stroke();
+                newStroke.strokeID = Integer.parseInt(numbers[0]);
+                newStroke.x = Float.parseFloat(numbers[1]);
+                newStroke.y = Float.parseFloat(numbers[2]);
+                newStroke.width = Float.parseFloat(numbers[3]);
+                newStroke.height = Float.parseFloat(numbers[4]);
+                newStroke.rotation = Float.parseFloat(numbers[5]);
 
-            strokes[i] = newStroke;
+                strokes[i] = newStroke;
+            }
+            
+            allStrokeVariations.add(strokes);
         }
 
-        strokeData.setStrokes(strokes);
+        Stroke[][] newStrokes = new Stroke[allStrokeVariations.size()][];
+
+        for (int i = 0; i < allStrokeVariations.size(); i++) {
+            newStrokes[i] = allStrokeVariations.get(i);
+        }
+        
+
+        strokeData.setStrokes(newStrokes);
 
         return strokeData;
     }
@@ -134,17 +153,24 @@ public class StrokeDataTable extends SkritterDatabaseTable<StrokeData> {
         values.put(RUNE, strokeData.getRune());
         values.put(LANGUAGE, strokeData.getLanguage());
         String strokes = "";
-        String arraySeparator = "";
+        String outerSeparator = "";
 
-        for (Stroke stroke : strokeData.getStrokes()) {
-            strokes += arraySeparator + stroke.strokeID + numberSeparator +
-                    stroke.x + numberSeparator +
-                    stroke.y + numberSeparator +
-                    stroke.width + numberSeparator +
-                    stroke.height + numberSeparator +
-                    stroke.rotation;
+        for (Stroke[] strokeVariation : strokeData.getStrokes()) {
+            String strokeVariationString = "";
+            String arraySeparator = "";
+            for (Stroke stroke : strokeVariation) {
+                strokeVariationString += arraySeparator + stroke.strokeID + numberSeparator +
+                        stroke.x + numberSeparator +
+                        stroke.y + numberSeparator +
+                        stroke.width + numberSeparator +
+                        stroke.height + numberSeparator +
+                        stroke.rotation;
 
-            arraySeparator = strokeSeparator;
+                arraySeparator = strokeSeparator;
+            }
+            
+            strokes += outerSeparator + strokeVariationString;
+            outerSeparator = variationSeparator;
         }
 
         values.put(STROKES, strokes);

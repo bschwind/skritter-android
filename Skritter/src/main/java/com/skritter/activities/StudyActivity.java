@@ -3,33 +3,39 @@ package com.skritter.activities;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
 
+import com.skritter.R;
 import com.skritter.SkritterApplication;
 import com.skritter.math.BoundingBox;
+import com.skritter.math.Vector2;
+import com.skritter.models.Param;
+import com.skritter.models.Stroke;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
-import com.skritter.math.Vector2;
 import com.skritter.models.Vocab;
 import com.skritter.persistence.SkritterDatabaseHelper;
 import com.skritter.persistence.StrokeDataTable;
 import com.skritter.persistence.VocabTable;
 import com.skritter.taskFragments.GetStudyItemsTaskFragment;
+import com.skritter.utils.Recognizer;
 import com.skritter.utils.ShortStraw;
 import com.skritter.utils.StringUtil;
+import com.skritter.utils.StrokeTree;
 import com.skritter.views.PromptCanvas;
-import com.skritter.R;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class StudyActivity extends FragmentActivity implements GetStudyItemsTaskFragment.TaskCallbacks {
     private PromptCanvas promptCanvas;
@@ -39,6 +45,9 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     private int currentIndex = 0;
     private int currentRuneIndex = 0;
     private StudyItem currentItem;
+    private StrokeData currentStrokeData;
+    private Set<Param> currentParams;
+    private StrokeTree currentStrokeTree;
     private SkritterDatabaseHelper db;
 
     @Override
@@ -92,6 +101,8 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
 
         getStudyItemsTaskFragment.onAttach(this);
         getStudyItemsTaskFragment.start(accessToken);
+        
+        currentParams = new HashSet<Param>();
     }
 
     @Override
@@ -175,7 +186,16 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         startPoint.x = box.x;
         startPoint.y = box.y;
         
-        promptCanvas.drawNextStroke(startPoint, startAngle);
+        Stroke stroke = Recognizer.recognizeStroke(points, numPoints, currentStrokeTree, currentStrokeData, currentParams, promptCanvas.getWidth());
+        
+        if (stroke != null) {
+            promptCanvas.drawNextStroke(stroke, startPoint, startAngle);
+        }
+        
+        if (currentStrokeTree.characterIsComplete()) {
+            
+            // advance to next character
+        }
     }
 
     public void onBack(View view) {
@@ -270,13 +290,31 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         TextView timeText = (TextView) findViewById(R.id.itemTimes);
         timeText.setText("" + currentItem.getReviews());
 
-        StrokeData strokeData = null;
         if (currentItem.isRune() && vocab != null) {
             String kanjiOnly = StringUtil.filterOutNonKanji(vocab.getWriting());
-            strokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, kanjiOnly.substring(currentRuneIndex, currentRuneIndex + 1), vocab.getLanguage());
+            currentStrokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, kanjiOnly.substring(currentRuneIndex, currentRuneIndex + 1), vocab.getLanguage());
+        }
+        
+        if (currentStrokeData != null) {
+            currentParams.clear();
+            
+            for (int i = 0; i < currentStrokeData.getStrokes().length; i++) {
+                for (int j = 0; j < currentStrokeData.getStrokes()[i].length; j++) {
+                    Stroke stroke = currentStrokeData.getStrokes()[i][j];
+                    
+                    for (Param param : Param.params) {
+                        if (stroke.strokeID == param.bitmapID) {
+                            currentParams.add(param);
+                            currentParams.add(Param.getReversedParam(param));
+                        }
+                    }
+                }
+            }
+
+            currentStrokeTree = new StrokeTree(currentStrokeData);
         }
 
-        promptCanvas.setStudyItemAndVocab(currentItem, vocab, strokeData);
+        promptCanvas.setStudyItemAndVocab(currentItem, vocab, currentStrokeData);
 
         updateText();
     }
@@ -322,6 +360,12 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
                 iterator.remove();
             }
         }
+        
+        Collections.shuffle(itemsToStudy);
+//        
+//        itemsToStudy.clear();
+//        
+//        itemsToStudy.add(StudyItemTable.getInstance().read(db, "bschwind-ja-中-3-rune"));
 
         updateCurrentItem();
 

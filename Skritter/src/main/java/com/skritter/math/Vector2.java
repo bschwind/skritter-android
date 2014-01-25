@@ -8,6 +8,11 @@ public class Vector2 {
         this.x = x;
         this.y = y;
     }
+    
+    public Vector2(Vector2 copy) {
+        this.x = copy.x;
+        this.y = copy.y;
+    }
 
     public static float distance(Vector2 v1, Vector2 v2) {
         float x = v2.x - v1.x;
@@ -21,6 +26,10 @@ public class Vector2 {
     
     public static float length(Vector2 v) {
         return (float)Math.sqrt(v.x * v.x + v.y * v.y);
+    }
+    
+    public static float length(float x, float y) {
+        return (float)Math.sqrt(x * x + y * y);
     }
     
     public static float angleBetweenVectors(Vector2 v1, Vector2 v2) {

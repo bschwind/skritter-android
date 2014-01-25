@@ -19,6 +19,7 @@ import com.skritter.utils.ShortStraw;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class RuneItemPanel extends StudyItemPanel {
@@ -44,8 +45,8 @@ public class RuneItemPanel extends StudyItemPanel {
     private int numPoints;
     private static final int maxStrokePoints = 2048;
 
-    private Bitmap[] strokeBitmaps;
-    private StrokeRenderData[] strokeRenderData;
+    private HashMap<Integer, Bitmap> strokeBitmaps;
+    private HashMap<Stroke, StrokeRenderData> strokeRenderDataMap;
 
     // Bitmap and Canvas for drawing strokes
     private Bitmap strokeBitmap;
@@ -83,41 +84,61 @@ public class RuneItemPanel extends StudyItemPanel {
 
     private void loadStrokeBitmaps(Context context) {
         if (strokeData != null) {
-            if (strokeBitmaps != null && strokeBitmaps.length > 0) {
-                for (Bitmap bitmap : strokeBitmaps) {
+            if (strokeBitmaps != null && strokeBitmaps.size() > 0) {
+                for (Bitmap bitmap : strokeBitmaps.values()) {
                     bitmap.recycle();
                 }
+                strokeBitmaps.clear();
+            } else {
+                strokeBitmaps = new HashMap<Integer, Bitmap>();
             }
-
-            strokeBitmaps = new Bitmap[strokeData.getStrokes().length];
-            strokeRenderData = new StrokeRenderData[strokeData.getStrokes().length];
-
-            for (int i = 0; i < strokeBitmaps.length; i++) {
-                String strokeID = "" + strokeData.getStrokes()[i].strokeID;
-                int remainingZeroes = 4 - strokeID.length();
-
-                // Pad the filename with zeroes
-                for (int j = 0; j < remainingZeroes; j++) {
-                    strokeID = "0" + strokeID;
+            
+            if (strokeRenderDataMap != null && strokeRenderDataMap.size() > 0) {
+                strokeRenderDataMap.clear();
+            } else {
+                strokeRenderDataMap = new HashMap<Stroke, StrokeRenderData>();
+            }
+            
+            for (int i = 0; i < strokeData.getStrokes().length; i++) {
+                for (int j = 0; j < strokeData.getStrokes()[i].length; j++) {
+                    Stroke stroke = strokeData.getStrokes()[i][j];
+                    
+                    if (!strokeBitmaps.containsKey(stroke.strokeID)) {
+                        strokeBitmaps.put(stroke.strokeID, loadBitmapFromBitmapID(stroke.strokeID, context));
+                    }
+                    
+                    if (!strokeRenderDataMap.containsKey(stroke)) {
+                        StrokeRenderData newStrokeRenderData = new StrokeRenderData();
+                        newStrokeRenderData.bitmapID = stroke.strokeID;
+                        newStrokeRenderData.hasBeenDrawn = false;
+                        newStrokeRenderData.position = new Vector2(0, 0);
+                        newStrokeRenderData.rotation = 0;
+                        newStrokeRenderData.t = 0;
+                        
+                        strokeRenderDataMap.put(stroke, newStrokeRenderData);
+                    }
                 }
-
-                String fileName = "strokes/" + strokeID + ".png";
-                try {
-                    strokeBitmaps[i] = BitmapFactory.decodeStream(context.getAssets().open(fileName));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                // Create the stroke render data
-                strokeRenderData[i] = new StrokeRenderData();
-                strokeRenderData[i].bitmapID = strokeData.getStrokes()[i].strokeID;
-                strokeRenderData[i].hasBeenDrawn = false;
-//                strokeRenderData[i].position = new Vector2(strokeData.getStrokes()[i].x, strokeData.getStrokes()[i].y);
-                strokeRenderData[i].position = new Vector2(0, 0);
-                strokeRenderData[i].rotation = 0;
-                strokeRenderData[i].t = 0;
             }
         }
+    }
+    
+    private Bitmap loadBitmapFromBitmapID(int bitmapID, Context context) {
+        String strokeID = "" + bitmapID;
+        int remainingZeroes = 4 - strokeID.length();
+
+        // Pad the filename with zeroes
+        for (int j = 0; j < remainingZeroes; j++) {
+            strokeID = "0" + strokeID;
+        }
+
+        String fileName = "strokes/" + strokeID + ".png";
+        try {
+            return BitmapFactory.decodeStream(context.getAssets().open(fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return null;
     }
 
     @Override
@@ -128,36 +149,32 @@ public class RuneItemPanel extends StudyItemPanel {
         strokeCanvas = new Canvas(strokeBitmap);
     }
 
-    public void drawNextStroke(Vector2 startPoint, float startAngle) {
-        if (strokeRenderData == null) {
+    public void drawNextStroke(Stroke stroke, Vector2 startPoint, float startAngle) {
+        if (strokeRenderDataMap == null) {
             return;
         }
+        
+        StrokeRenderData renderData = strokeRenderDataMap.get(stroke);
 
-        for (int i = 0; i < strokeRenderData.length; i++) {
-            if (!strokeRenderData[i].hasBeenDrawn) {
-                strokeRenderData[i].hasBeenDrawn = true;
-                strokeRenderData[i].position = startPoint;
-                strokeRenderData[i].rotation = (float)(startAngle * (180.0f / (Math.PI)));
+        renderData.hasBeenDrawn = true;
+        renderData.position = startPoint;
+        renderData.rotation = (float)(startAngle * (180.0f / (Math.PI)));
 
-                float targetAngle = 0.0f;
+        float targetAngle = 0.0f;
 
-                for (int j = 0; j < Param.params.length; j++) {
-                    if (Param.params[j].bitmapID == strokeRenderData[i].bitmapID) {
-                        Vector2 start = Param.params[j].corners[0];
-                        Vector2 end = Param.params[j].corners[Param.params[j].corners.length-1];
+        for (int j = 0; j < Param.params.length; j++) {
+            if (Param.params[j].bitmapID == renderData.bitmapID) {
+                Vector2 start = Param.params[j].corners[0];
+                Vector2 end = Param.params[j].corners[Param.params[j].corners.length-1];
 
-                        Vector2 dir = new Vector2(end.x - start.x, end.y - start.y);
-                        targetAngle = Vector2.angleBetweenVectors(new Vector2(1.0f, 0.0f), dir);
-                        targetAngle = (float)(targetAngle * (180.0f / (Math.PI)));
-                        break;
-                    }
-                }
-
-                strokeRenderData[i].rotation = strokeRenderData[i].rotation - targetAngle;
-                
-                return;
+                Vector2 dir = new Vector2(end.x - start.x, end.y - start.y);
+                targetAngle = Vector2.angleBetweenVectors(new Vector2(1.0f, 0.0f), dir);
+                targetAngle = (float)(targetAngle * (180.0f / (Math.PI)));
+                break;
             }
         }
+
+        renderData.rotation = renderData.rotation - targetAngle;
     }
 
     long animationTime = 300;
@@ -176,8 +193,9 @@ public class RuneItemPanel extends StudyItemPanel {
             return;
         }
 
-        for (int i = 0; i < strokeRenderData.length; i++) {
-            StrokeRenderData renderData = strokeRenderData[i];
+        for (Stroke stroke : strokeRenderDataMap.keySet()) {
+            StrokeRenderData renderData = strokeRenderDataMap.get(stroke);
+            
             if (!renderData.hasBeenDrawn) {
                 continue;
             }
@@ -186,50 +204,53 @@ public class RuneItemPanel extends StudyItemPanel {
                 renderData.t += dt;
             } else {
                 renderData.t = animationTime;
+                
+                // possibly continue here, so we don't have to do any calculations
             }
 
             float lerpFactor = (float)renderData.t / animationTime;
 
-            Stroke stroke = strokeData.getStrokes()[i];
+            Bitmap strokeBitmap = strokeBitmaps.get(renderData.bitmapID);
+            
             float x = stroke.x * customWidth;
             x = MathUtil.easeInOutCubic(renderData.t, renderData.position.x, x - renderData.position.x, animationTime);
             float y = stroke.y * customHeight;
             y = MathUtil.easeInOutCubic(renderData.t, renderData.position.y, y - renderData.position.y, animationTime);
 
-            float scaleX = (stroke.width * customWidth) / strokeBitmaps[i].getWidth();
-            float scaleY = (stroke.height * customHeight) / strokeBitmaps[i].getHeight();
+            float scaleX = (stroke.width * customWidth) / strokeBitmap.getWidth();
+            float scaleY = (stroke.height * customHeight) / strokeBitmap.getHeight();
 
             float rotation = -stroke.rotation;
             rotation = MathUtil.easeInOutCubic(renderData.t, renderData.rotation, rotation - renderData.rotation, animationTime);
 
             Matrix matrix = new Matrix();
             // Move the bitmap so we can rotate and scale around the center of the image
-            matrix.setTranslate(-strokeBitmaps[i].getWidth() * 0.5f, -strokeBitmaps[i].getHeight() * 0.5f);
+            matrix.setTranslate(-strokeBitmap.getWidth() * 0.5f, -strokeBitmap.getHeight() * 0.5f);
             matrix.postRotate(rotation);
             matrix.postScale(scaleX, scaleY);
             // Move it back so we draw with the bitmap's upper left corner at (x, y)
-            matrix.postTranslate(strokeBitmaps[i].getWidth() * 0.5f * scaleX, strokeBitmaps[i].getHeight() * 0.5f * scaleY);
+            matrix.postTranslate(strokeBitmap.getWidth() * 0.5f * scaleX, strokeBitmap.getHeight() * 0.5f * scaleY);
             matrix.postTranslate(x, y);
 
-            canvas.drawBitmap(strokeBitmaps[i], matrix, null);
+            canvas.drawBitmap(strokeBitmap, matrix, null);
 
-            for (int j = 0; j < Param.params.length; j++) {
-                if (Param.params[j].bitmapID == strokeRenderData[i].bitmapID) {
-                    for (int k = 0; k < Param.params[j].corners.length; k++) {
-                        float[] points = new float[]{Param.params[j].corners[k].x, Param.params[j].corners[k].y};
-                        matrix.mapPoints(points);
-
-                        canvas.drawCircle(points[0], points[1], 10f, cornerPaint);
-                    }
-                }
-            }
+//            for (int j = 0; j < Param.params.length; j++) {
+//                if (Param.params[j].bitmapID == strokeRenderDataMap[i].bitmapID) {
+//                    for (int k = 0; k < Param.params[j].corners.length; k++) {
+//                        float[] points = new float[]{Param.params[j].corners[k].x, Param.params[j].corners[k].y};
+//                        matrix.mapPoints(points);
+//
+//                        canvas.drawCircle(points[0], points[1], 10f, cornerPaint);
+//                    }
+//                }
+//            }
         }
 
-        for (Vector2 corner : corners) {
-            if (corner != null) {
-                canvas.drawCircle(corner.x, corner.y, 10f, cornerPaint);
-            }
-        }
+//        for (Vector2 corner : corners) {
+//            if (corner != null) {
+//                canvas.drawCircle(corner.x, corner.y, 10f, cornerPaint);
+//            }
+//        }
     }
 
     private void drawRuneBackground(Canvas canvas) {
@@ -285,7 +306,7 @@ public class RuneItemPanel extends StudyItemPanel {
             strokeListener.onNewStroke(points, numPoints);
         }
 
-        strokeCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        clear();
 
         Vector2[] newCorners = ShortStraw.runShortStraw(points, numPoints);
         for (int i = 0; i < newCorners.length; i++) {

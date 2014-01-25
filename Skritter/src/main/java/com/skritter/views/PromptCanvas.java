@@ -8,6 +8,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.skritter.models.Stroke;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
 import com.skritter.math.Vector2;
@@ -92,9 +93,9 @@ public class PromptCanvas extends View {
         statusBorderPaint.setStrokeWidth(6);
     }
 
-    public void drawNextStroke(Vector2 startPoint, float startAngle) {
+    public void drawNextStroke(Stroke stroke, Vector2 startPoint, float startAngle) {
         RuneItemPanel runeItemPanel = (RuneItemPanel)studyItemPanelMap.get("rune");
-        runeItemPanel.drawNextStroke(startPoint, startAngle);
+        runeItemPanel.drawNextStroke(stroke, startPoint, startAngle);
     }
 
     protected void onDraw(Canvas canvas) {
