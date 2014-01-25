@@ -83,6 +83,21 @@ public class StudyItemTable extends SkritterDatabaseTable<StudyItem> {
         return studyItem;
     }
 
+    public StudyItem read(SkritterDatabaseHelper db, String id) {
+        String selectQuery = "SELECT rowid, * FROM " + getTableName() + " WHERE " + STUDY_ITEM_ID + " = " + "\"" + id + "\"";
+
+        SQLiteDatabase sqlDB = db.getReadableDatabase();
+        Cursor cursor = sqlDB.rawQuery(selectQuery, null);
+
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+
+        StudyItem studyItem = populateItem(cursor);
+
+        return studyItem;
+    }
+
     @Override
     public long update(SkritterDatabaseHelper db, StudyItem studyItem) {
         ContentValues values = populateContentValues(studyItem);
