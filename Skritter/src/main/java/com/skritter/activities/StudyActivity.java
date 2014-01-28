@@ -186,14 +186,15 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         startPoint.x = box.x;
         startPoint.y = box.y;
         
-        Stroke stroke = Recognizer.recognizeStroke(points, numPoints, currentStrokeTree, currentStrokeData, currentParams, promptCanvas.getWidth());
+        Stroke stroke = Recognizer.recognizeStroke(points, numPoints, currentStrokeTree, currentParams, promptCanvas.getWidth());
         
         if (stroke != null) {
             promptCanvas.drawNextStroke(stroke, startPoint, startAngle);
         }
         
         if (currentStrokeTree.characterIsComplete()) {
-            
+            promptCanvas.setStatusBorderColor(Color.GREEN);
+            promptCanvas.setShouldDrawStatusBorder(true);
             // advance to next character
         }
     }
@@ -216,6 +217,7 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
 
     public void onNext(View view) {
         updateCurrentIndex(true);
+        promptCanvas.setShouldDrawStatusBorder(false);
     }
 
     private void updateCurrentIndex(boolean forward) {

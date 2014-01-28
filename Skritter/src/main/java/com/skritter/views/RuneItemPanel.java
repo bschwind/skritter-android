@@ -69,7 +69,7 @@ public class RuneItemPanel extends StudyItemPanel {
         strokePaint.setStyle(Paint.Style.STROKE);
         strokePaint.setStrokeJoin(Paint.Join.ROUND);
         strokePaint.setStrokeCap(Paint.Cap.ROUND);
-        strokePaint.setStrokeWidth(10);
+        strokePaint.setStrokeWidth(20);
 
         drawPath = new Path();
 

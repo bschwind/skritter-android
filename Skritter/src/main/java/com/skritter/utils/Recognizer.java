@@ -19,17 +19,13 @@ public class Recognizer {
     private static final float angleThreshold = 30.0f;
     private static float distanceThreshold;
     private static float lengthThreshold;
-    private static int orderStrictness;
     private static int strokeOrderWindow = 0; // How many strokes past the "correct" stroke are you allowed to draw?
     private static LinkedHashMap<StrokeTree.StrokeNode, List<Param>> potentialMatches = new LinkedHashMap<StrokeTree.StrokeNode, List<Param>>();
     
     // Return the bitmap ID of the recognized stroke
-    public static Stroke recognizeStroke(Vector2[] points, int numPoints, StrokeTree strokeTree, StrokeData strokeData, Set<Param> relevantParams, int canvasSize) {
+    public static Stroke recognizeStroke(Vector2[] points, int numPoints, StrokeTree strokeTree, Set<Param> relevantParams, int canvasSize) {
         distanceThreshold = 150.0f * (canvasSize / 600.0f);
         lengthThreshold = 300.0f * (canvasSize / 600.0f);
-        orderStrictness = 0;
-        
-        int strokeIndex = -1;
         
         Vector2[] corners = ShortStraw.runShortStraw(points, numPoints);
         
@@ -76,7 +72,7 @@ public class Recognizer {
         }
         
         // What remains in potentialMatches at this point are the possible StrokeNodes
-        // Pick the first one in the list, if one exists
+        // Pick the one with the highest score according to angles, distances, corner penalties, and lengths
         
         if (potentialMatches.isEmpty()) {
             return null;
@@ -85,28 +81,6 @@ public class Recognizer {
             strokeTree.markNodeAsDrawn(returnStroke);
             return returnStroke.stroke;
         }
-        
-//        
-//        for (int i = 0; i < strokeData.getStrokes().length; i++) {
-//            Stroke stroke = strokeData.getStrokes()[i][0]; // this is bad
-//            
-//            if (stroke.hasBeenDrawn) {
-//                continue;
-//            }
-//
-//            for (int j = 0; j < Param.params.length; j++) {
-//                Param param = Param.params[j];
-//                
-//                if (stroke.strokeID == param.bitmapID) {
-//                    if (corners.length == param.corners.length) {
-//                        stroke.hasBeenDrawn = true;
-//                        return stroke.strokeID;
-//                    }
-//                }
-//            }
-//        }
-//        
-//        return strokeIndex;
     }
     
     private static boolean strokeMeetsThresholds(Vector2[] corners, Stroke stroke, Param param, int canvasSize) {
