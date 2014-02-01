@@ -38,6 +38,16 @@ public class PromptCanvas extends View {
         this.strokeListener = strokeListener;
     }
 
+    public interface IDoubleTapListener {
+        public void onDoubleTap();
+    }
+
+    private IDoubleTapListener doubleTapListener;
+
+    public void setEventListener(IDoubleTapListener doubleTapListener) {
+        this.doubleTapListener = doubleTapListener;
+    }
+
     // The different Paint styles for drawing the canvas elements
     private Paint statusBorderPaint;
 
@@ -48,6 +58,14 @@ public class PromptCanvas extends View {
 
     private Map<String, StudyItemPanel> studyItemPanelMap;
     private StudyItemPanel currentPanel;
+
+    // Double tap variables
+    private boolean isTap = false;
+    private float tapDistanceThreshold = 10.0f;
+    private long lastTapTime;
+    private long doubleTapTimeThreshold = 400;
+    private Vector2 startTapLocation = new Vector2(0, 0);
+    private Vector2 lastTapLocation = new Vector2(0, 0);
 
     public PromptCanvas(Context context) {
         super(context);
@@ -183,17 +201,44 @@ public class PromptCanvas extends View {
         if (currentPanel != null) {
             currentPanel.onTouchDown(x, y);
         }
+        
+        isTap = true;
+        startTapLocation.x = x;
+        startTapLocation.y = y;
     }
 
     private void touchMove(float x, float y) {
         if (currentPanel != null) {
             currentPanel.onTouchMove(x, y);
         }
+        
+        Vector2 touchPos = new Vector2(x, y);
+        if (Vector2.distance(touchPos, startTapLocation) > tapDistanceThreshold) {
+            isTap = false;
+        }
     }
 
     private void touchUp(float x, float y) {
         if (currentPanel != null) {
             currentPanel.onTouchUp(x, y);
+        }
+        
+        long now = System.currentTimeMillis();
+        if (now - lastTapTime < doubleTapTimeThreshold && Vector2.distance(lastTapLocation, new Vector2(x, y)) < 50) {
+            onDoubleTap();
+        }
+        
+        if (isTap) {
+            lastTapTime = System.currentTimeMillis();
+            lastTapLocation = new Vector2(x, y);
+        }
+        
+        isTap = false;
+    }
+    
+    private void onDoubleTap() {
+        if (doubleTapListener != null) {
+            doubleTapListener.onDoubleTap();
         }
     }
 

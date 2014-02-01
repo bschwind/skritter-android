@@ -77,6 +77,13 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             }
         });
 
+        promptCanvas.setEventListener(new PromptCanvas.IDoubleTapListener() {
+            @Override
+            public void onDoubleTap() {
+                onCanvasDoubleTap();
+            }
+        });
+
         // Restore saved state using the code pattern below
         if (savedInstanceState != null) {
             currentIndex = savedInstanceState.getInt("currentIndex");
@@ -197,6 +204,10 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             promptCanvas.setShouldDrawStatusBorder(true);
             // advance to next character
         }
+    }
+    
+    private void onCanvasDoubleTap() {
+        
     }
 
     public void onBack(View view) {
