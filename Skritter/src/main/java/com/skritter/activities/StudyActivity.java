@@ -44,6 +44,8 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     private int currentIndex = 0;
     private int currentRuneIndex = 0;
     private StudyItem currentItem;
+    private Vocab currentVocab;
+    private boolean runeIsComplete;
     private Set<Param> currentParams;
     private StrokeTree currentStrokeTree;
     private SkritterDatabaseHelper db;
@@ -203,6 +205,8 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         if (currentStrokeTree.characterIsComplete()) {
             promptCanvas.setStatusBorderColor(Color.GREEN);
             promptCanvas.setShouldDrawStatusBorder(true);
+            runeIsComplete = true;
+            updateText();
             // advance to next character
         }
     }
@@ -212,6 +216,7 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     }
 
     public void onBack(View view) {
+        runeIsComplete = false;
         updateCurrentIndex(false);
     }
 
@@ -228,6 +233,7 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     }
 
     public void onNext(View view) {
+        runeIsComplete = false;
         updateCurrentIndex(true);
         promptCanvas.setShouldDrawStatusBorder(false);
     }
@@ -293,9 +299,9 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
 
         String[] vocabIDs = currentItem.getVocabIDs();
 
-        Vocab vocab = null;
+        currentVocab = null;
         if (vocabIDs != null && vocabIDs.length > 0) {
-            vocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
+            currentVocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
         }
 
         TextView text = (TextView) findViewById(R.id.itemDetails);
@@ -306,9 +312,9 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         
         StrokeData currentStrokeData = null;
 
-        if (currentItem.isRune() && vocab != null) {
-            String kanjiOnly = StringUtil.filterOutNonKanji(vocab.getWriting());
-            currentStrokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, kanjiOnly.substring(currentRuneIndex, currentRuneIndex + 1), vocab.getLanguage());
+        if (currentItem.isRune() && currentVocab != null) {
+            String kanjiOnly = StringUtil.filterOutNonKanji(currentVocab.getWriting());
+            currentStrokeData = StrokeDataTable.getInstance().getByRuneAndLanguage(db, kanjiOnly.substring(currentRuneIndex, currentRuneIndex + 1), currentVocab.getLanguage());
         }
         
         if (currentStrokeData != null) {
@@ -330,17 +336,38 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             currentStrokeTree = new StrokeTree(currentStrokeData);
         }
 
-        promptCanvas.setStudyItemAndVocab(currentItem, vocab, currentStrokeData);
+        promptCanvas.setStudyItemAndVocab(currentItem, currentVocab, currentStrokeData);
 
         updateText();
     }
 
     private void updateText() {
-        TextView text = (TextView) findViewById(R.id.itemDetails);
-        text.setText(currentItem.getId() + ", " + currentItem.getPart());
+        TextView writingLabel = (TextView) findViewById(R.id.itemDetails);
+        TextView definitionLabel = (TextView) findViewById(R.id.itemTimes);
+        if (currentItem.isRune()) {
+            String kanjiOnly = StringUtil.filterOutNonKanji(currentVocab.getWriting());
+            String modifiedWriting = currentVocab.getWriting();
+            
+            boolean shouldShowFullWriting = runeIsComplete && currentRuneIndex + 1 == kanjiOnly.length();
+            
+            if (!shouldShowFullWriting) {
+                int numUnderscores = kanjiOnly.length();
+                
+                int stopIndex = runeIsComplete ? currentRuneIndex + 1 : currentRuneIndex;
 
-        TextView timeText = (TextView) findViewById(R.id.itemTimes);
-        timeText.setText("" + currentItem.getReviews());
+                for (int i = numUnderscores-1; i >= stopIndex; i--) {
+                    String charToReplace = kanjiOnly.substring(i, i+1);
+                    // todo - Implement "replaceFirst", because this won't work for words like 日曜日
+                    modifiedWriting = modifiedWriting.replaceFirst(charToReplace, " _ ");
+                }
+            }
+            
+            writingLabel.setText(modifiedWriting);
+            definitionLabel.setText(currentVocab.getDefinitionByLanguage("en"));
+        } else {
+            writingLabel.setText("");
+            definitionLabel.setText("");
+        }
     }
 
     @Override

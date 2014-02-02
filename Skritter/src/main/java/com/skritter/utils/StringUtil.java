@@ -6,7 +6,7 @@ public class StringUtil {
     }
 
     public static String replaceAllKanaWith(String text, String replacement) {
-        return text.replaceAll("[\u3040-\u3096]+", replacement);
+        return text.replaceAll("[\u3040-\u3096]", replacement);
     }
 
     public static String filterOutNonKanji(String text) {
@@ -14,7 +14,7 @@ public class StringUtil {
     }
 
     public static String replaceAllKanjiWith(String text, String replacement) {
-        return text.replaceAll("[\u4e00-\u9faf]+", replacement);
+        return text.replaceAll("[\u4e00-\u9faf]", replacement);
     }
 
     public static boolean isKana(char character) {

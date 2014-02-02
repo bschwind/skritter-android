@@ -63,17 +63,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:context=".StudyActivity"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <TextView android:id="@+id/itemDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"/>
+            android:layout_weight="1"
+            android:textSize="30sp"/>
 
         <TextView android:id="@+id/itemTimes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"/>
+            android:layout_weight="1"
+            android:textSize="30sp"/>
     </LinearLayout>
 
 </LinearLayout>
