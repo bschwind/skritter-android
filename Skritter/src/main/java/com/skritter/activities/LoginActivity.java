@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.skritter.SkritterApplication;
 import com.skritter.models.LoginStatus;
@@ -55,7 +56,11 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
         if (savedInstanceState != null) {
             //savedInstanceState.get("someKey");
         }
-
+        
+        reattachFragments();
+    }
+    
+    private void reattachFragments() {
         FragmentManager fm = getSupportFragmentManager();
         taskFragment = (LoginTaskFragment) fm.findFragmentByTag("task");
 
@@ -106,7 +111,7 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
         }
         progressDialog.setCancelable(false);
         progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Logging in...");
+        progressDialog.setMessage(getResources().getString(R.string.loggingIn));
         progressDialog.show();
     }
 
@@ -135,6 +140,8 @@ public class LoginActivity extends FragmentActivity implements LoginTaskFragment
             startActivity(intent);
         } else {
             // Invalid username toast
+            Toast toast = Toast.makeText(getApplicationContext(), getResources().getText(R.string.invalidCredentials), Toast.LENGTH_SHORT);
+            toast.show();
         }
     }
 

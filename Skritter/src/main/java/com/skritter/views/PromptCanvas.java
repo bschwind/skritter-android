@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PromptCanvas extends View {
+    // Grading button listener code
     public interface IGradingButtonListener {
         public void onGradingButtonPressed(int gradingButton);
     }
@@ -28,6 +29,7 @@ public class PromptCanvas extends View {
         this.gradingButtonListener = gradingButtonListener;
     }
 
+    // Stroke drawing listener code
     public interface IStrokeListener {
         public void onNewStroke(Vector2[] strokePoints, int numPoints);
     }
@@ -38,6 +40,7 @@ public class PromptCanvas extends View {
         this.strokeListener = strokeListener;
     }
 
+    // Double tap listener code
     public interface IDoubleTapListener {
         public void onDoubleTap();
     }
@@ -48,11 +51,9 @@ public class PromptCanvas extends View {
         this.doubleTapListener = doubleTapListener;
     }
 
-    // The different Paint styles for drawing the canvas elements
-    private Paint statusBorderPaint;
-
     // The status border is colored depending on the grade of the study item
     private boolean shouldDrawStatusBorder = false;
+    private Paint statusBorderPaint;
 
     private int customWidth, customHeight;
 

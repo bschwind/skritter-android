@@ -39,13 +39,11 @@ import java.util.Set;
 
 public class StudyActivity extends FragmentActivity implements GetStudyItemsTaskFragment.TaskCallbacks {
     private PromptCanvas promptCanvas;
-    private GetStudyItemsTaskFragment getStudyItemsTaskFragment;
     private ProgressDialog progressDialog;
     private List<StudyItem> itemsToStudy;
     private int currentIndex = 0;
     private int currentRuneIndex = 0;
     private StudyItem currentItem;
-    private StrokeData currentStrokeData;
     private Set<Param> currentParams;
     private StrokeTree currentStrokeTree;
     private SkritterDatabaseHelper db;
@@ -61,7 +59,16 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         setContentView(R.layout.activity_study);
 
         db = new SkritterDatabaseHelper(this);
+        currentParams = new HashSet<Param>();
+        
+        wireEventListeners();
 
+        loadSavedState(savedInstanceState);
+
+        reattachFragments();
+    }
+    
+    private void wireEventListeners() {
         promptCanvas = (PromptCanvas) findViewById(R.id.canvas);
         promptCanvas.setEventListener(new PromptCanvas.IGradingButtonListener() {
             @Override
@@ -83,17 +90,19 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
                 onCanvasDoubleTap();
             }
         });
-
-        // Restore saved state using the code pattern below
+    }
+    
+    private void loadSavedState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             currentIndex = savedInstanceState.getInt("currentIndex");
         }
-
+    }
+    
+    private void reattachFragments() {
         FragmentManager fm = getSupportFragmentManager();
-        getStudyItemsTaskFragment = (GetStudyItemsTaskFragment) fm.findFragmentByTag("getStudyItemsTask");
+        GetStudyItemsTaskFragment getStudyItemsTaskFragment = (GetStudyItemsTaskFragment) fm.findFragmentByTag("getStudyItemsTask");
 
-        // If the Fragment is non-null, then it is currently being
-        // retained across a configuration change.
+        // If the Fragment is non-null, then it is currently being retained across a configuration change.
         if (getStudyItemsTaskFragment == null) {
             getStudyItemsTaskFragment = new GetStudyItemsTaskFragment();
             fm.beginTransaction().add(getStudyItemsTaskFragment, "getStudyItemsTask").commit();
@@ -108,8 +117,6 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
 
         getStudyItemsTaskFragment.onAttach(this);
         getStudyItemsTaskFragment.start(accessToken);
-        
-        currentParams = new HashSet<Param>();
     }
 
     @Override
@@ -125,12 +132,6 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt("currentIndex", currentIndex);
-    }
-
-    public void clearStrokes(View view) {
-        promptCanvas.setShouldDrawStatusBorder(true);
-        promptCanvas.setStatusBorderColor(Color.RED);
-        promptCanvas.clearStrokes();
     }
 
     private void initializeProgressDialog() {
@@ -302,6 +303,8 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
 
         TextView timeText = (TextView) findViewById(R.id.itemTimes);
         timeText.setText("" + currentItem.getReviews());
+        
+        StrokeData currentStrokeData = null;
 
         if (currentItem.isRune() && vocab != null) {
             String kanjiOnly = StringUtil.filterOutNonKanji(vocab.getWriting());

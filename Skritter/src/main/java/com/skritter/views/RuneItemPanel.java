@@ -53,6 +53,7 @@ public class RuneItemPanel extends StudyItemPanel {
     private Canvas strokeCanvas;
 
     private Paint strokePaint;
+    private float strokeWidth;
 
     private Path drawPath;
 
@@ -147,6 +148,9 @@ public class RuneItemPanel extends StudyItemPanel {
 
         strokeBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         strokeCanvas = new Canvas(strokeBitmap);
+        
+        strokeWidth = 0.026f * width;
+        strokePaint.setStrokeWidth(strokeWidth);
     }
 
     public void drawNextStroke(Stroke stroke, Vector2 startPoint, float startAngle) {

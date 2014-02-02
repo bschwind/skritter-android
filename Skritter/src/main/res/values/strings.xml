@@ -5,7 +5,9 @@
     <string name="action_settings">Settings</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
+    <string name="invalidCredentials">Invalid username or password</string>
     <string name="login">Login</string>
+    <string name="loggingIn">Logging in...</string>
     <string name="clearStrokes">Clear Strokes</string>
     <string name="home_welcome_message">Welcome, %1$s</string>
     <string name="study">Study</string>

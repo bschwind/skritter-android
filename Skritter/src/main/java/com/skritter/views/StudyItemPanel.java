@@ -194,7 +194,7 @@ public abstract class StudyItemPanel {
         String[] gradingTexts = new String[] { "forgot", "so-so", "got it", "too easy" };
 
         for (int i = 0; i < 4; i++) {
-            drawTextCenteredOnPoint("" + (i+1), (i * buttonWidth) + halfButtonWidth, customHeight - (buttonHeight * 0.75f), canvas, gradingNumberFontPaint);
+            drawTextCenteredOnPoint("" + (i+1), (i * buttonWidth) + halfButtonWidth, customHeight - (buttonHeight * 0.65f), canvas, gradingNumberFontPaint);
             drawTextCenteredOnPoint(gradingTexts[i], (i * buttonWidth) + halfButtonWidth, customHeight - (buttonHeight * 0.25f), canvas, gradingTextFontPaint);
             canvas.drawRect((i * buttonWidth), customHeight - buttonHeight, ((i+1) * buttonWidth), customHeight, gridPaint);
         }

@@ -51,7 +51,7 @@ public class DefinitionItemPanel extends StudyItemPanel {
         Resources resources = getResources();
         String tapToShow = resources.getString(R.string.tapToShowDefinition);
 
-        drawTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.2f * customHeight, canvas, characterFontPaint);
+        drawTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.146f * customHeight, canvas, characterFontPaint);
         drawTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.411f * customHeight, canvas, phoneticFontPaint);
 
         if (hasTapped) {
