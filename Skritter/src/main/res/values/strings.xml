@@ -18,5 +18,9 @@
     <string name="help">Help</string>
     <string name="tapToShowDefinition">(tap to show definition)</string>
     <string name="tapToShowReading">(tap to show reading)</string>
+    <string name="hideReading">Hide Reading</string>
+    <string name="hideReadingSummary">Hides the reading of the word for definition, rune, and tone prompts</string>
+    <string name="hideDefinition">Hide Definition</string>
+    <string name="hideDefinitionSummary">Hides the definition of the word for reading, rune, and tone prompts</string>
 
 </resources>

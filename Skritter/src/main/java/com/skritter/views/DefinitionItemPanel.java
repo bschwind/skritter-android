@@ -1,20 +1,24 @@
 package com.skritter.views;
 
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.preference.PreferenceManager;
 
 import com.skritter.R;
+import com.skritter.SkritterApplication;
 
 public class DefinitionItemPanel extends StudyItemPanel {
     private Paint characterFontPaint, phoneticFontPaint, tapToShowFont;
     private boolean hasTapped;
+    private boolean hideReading;
 
     public DefinitionItemPanel() {
         super();
-
         characterFontPaint = new Paint(Color.BLACK);
         characterFontPaint.setAntiAlias(true);
         characterFontPaint.setTextAlign(Paint.Align.CENTER);
@@ -26,6 +30,14 @@ public class DefinitionItemPanel extends StudyItemPanel {
         tapToShowFont = new Paint(Color.BLACK);
         tapToShowFont.setAntiAlias(true);
         tapToShowFont.setTextAlign(Paint.Align.CENTER);
+    }
+
+    @Override
+    public void loadAssets(Context context) {
+        super.loadAssets(context);
+        
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+        hideReading = settings.getBoolean(SkritterApplication.PreferenceKeys.HIDE_READING, false);
     }
 
     @Override
@@ -52,7 +64,10 @@ public class DefinitionItemPanel extends StudyItemPanel {
         String tapToShow = resources.getString(R.string.tapToShowDefinition);
 
         drawScaledTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.146f * customHeight, canvas, characterFontPaint);
-        drawScaledTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.411f * customHeight, canvas, phoneticFontPaint);
+        
+        if (!hideReading || hasTapped) {
+            drawScaledTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.411f * customHeight, canvas, phoneticFontPaint);
+        }
 
         if (hasTapped) {
             drawScaledTextCenteredOnPoint(vocab.getDefinitionByLanguage("en"), customWidth / 2.0f, 0.551f * customHeight, canvas, phoneticFontPaint);

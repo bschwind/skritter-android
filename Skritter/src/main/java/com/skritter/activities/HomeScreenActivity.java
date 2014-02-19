@@ -55,7 +55,8 @@ public class HomeScreenActivity extends FragmentActivity {
     }
 
     public void onClickSettings(View view) throws Exception {
-
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
     }
 
     public void onClickHelp(View view) throws Exception {

@@ -41,7 +41,13 @@
         <activity
             android:name=".activities.StudyActivity"
             android:label="@string/app_name"
-            android:parentActivityName="com.skritter.LoginActivity" >
+            android:parentActivityName="com.skritter.HomeScreenActivity" >
+        </activity>
+
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:label="@string/app_name"
+            android:parentActivityName="com.skritter.HomeScreenActivity" >
         </activity>
     </application>
 

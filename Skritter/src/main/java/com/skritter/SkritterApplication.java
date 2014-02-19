@@ -10,6 +10,8 @@ public class SkritterApplication extends Application {
         public static final String SECONDS_BEFORE_EXPIRING = "secondsBeforeExpiring";
         public static final String REFRESH_TOKEN = "refreshToken";
         public static final String ACCESS_TOKEN = "accessToken";
+        public static final String HIDE_READING = "hideReadingPreferenceKey";
+        public static final String HIDE_DEFINITION = "hideDefinitionPreferenceKey";
     }
 
 }
