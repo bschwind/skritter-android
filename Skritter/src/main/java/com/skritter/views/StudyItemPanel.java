@@ -161,6 +161,33 @@ public abstract class StudyItemPanel {
         canvas.drawText(text, x, y, fontPaint);
     }
 
+    protected void drawScaledTextCenteredOnPoint(String text, float x, float y, Canvas canvas, Paint fontPaint) {
+        float margin = 0.0482f * customWidth;
+        
+        // characterFontPaint must have the text alignment set to CENTER
+        float textWidth = fontPaint.measureText(text);
+        float textHeight = fontPaint.getFontSpacing();
+
+        y = y - fontPaint.ascent() - (textHeight / 2.0f);
+
+        float left = x - (textWidth / 2.0f);
+        float right = x + (textWidth / 2.0f);
+
+        float ratio = (customWidth - (margin * 2.0f)) / (right - left);
+        float newSize = fontPaint.getTextSize() * ratio;
+        float originalSize = fontPaint.getTextSize();
+        
+        if (ratio < 1.0f) {
+            // todo - When the newSize is below a certain size, we should chop
+            //        the line in two and do some word wrapping
+            fontPaint.setTextSize(newSize);
+        }
+
+        canvas.drawText(text, x, y, fontPaint);
+        
+        fontPaint.setTextSize(originalSize);
+    }
+
     protected void drawGrid(Canvas canvas) {
         // Draw intersecting lines
         canvas.drawLine(0, 0, customWidth, customHeight, gridPaint);

@@ -51,13 +51,13 @@ public class ReadingItemPanel extends StudyItemPanel {
         Resources resources = getResources();
         String tapToShow = resources.getString(R.string.tapToShowReading);
 
-        drawTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.146f * customHeight, canvas, characterFontPaint);
-        drawTextCenteredOnPoint(vocab.getDefinitionByLanguage("en"), customWidth / 2.0f, 0.420f * customHeight, canvas, definitionFontPaint);
+        drawScaledTextCenteredOnPoint(vocab.getWriting(), customWidth / 2.0f, 0.146f * customHeight, canvas, characterFontPaint);
+        drawScaledTextCenteredOnPoint(vocab.getDefinitionByLanguage("en"), customWidth / 2.0f, 0.420f * customHeight, canvas, definitionFontPaint);
 
         if (hasTapped) {
-            drawTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.617f * customHeight, canvas, characterFontPaint);
+            drawScaledTextCenteredOnPoint(vocab.getReading(), customWidth / 2.0f, 0.617f * customHeight, canvas, characterFontPaint);
         } else {
-            drawTextCenteredOnPoint(tapToShow, customWidth / 2.0f, 0.637f * customHeight, canvas, tapToShowFont);
+            drawScaledTextCenteredOnPoint(tapToShow, customWidth / 2.0f, 0.637f * customHeight, canvas, tapToShowFont);
         }
     }
 
