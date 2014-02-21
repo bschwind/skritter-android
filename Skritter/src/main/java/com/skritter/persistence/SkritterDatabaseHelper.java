@@ -12,7 +12,8 @@ public class SkritterDatabaseHelper extends SQLiteOpenHelper {
             new StudyItemTable(),
             new VocabTable(),
             new ReviewTable(),
-            new StrokeDataTable()
+            new StrokeDataTable(),
+            new SentenceTable()
     };
 
     public SkritterDatabaseHelper(Context context) {

@@ -5,43 +5,37 @@ import com.skritter.utils.JSONUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Vocab extends SkritterObject {
+public class Sentence extends SkritterObject {
     private String id;
     private String[] containedVocabIDs;
+    private String definitions; // This is a JSON Object: {"en":"(become) thirsty"}
     private String language;
     private boolean isRareKanji;
-    private String audioFile;
-    private int toughness;
-    private long changed;
-    private String writing;
-    private String toughnessString;
-    private String definitions; // This is a JSON Object: {"en":"(become) thirsty"}
-    private boolean starred;
     private String reading; // The phonetic reading (kana or pinyin) of the word or phrase
-    private String sentenceID;
+    private boolean starred;
+    private int toughness;
+    private String toughnessString;
+    private String writing;
 
-    public Vocab() {
+    public Sentence() {
         super();
     }
 
-    public Vocab(JSONObject jsonObject) {
+    public Sentence(JSONObject jsonObject) {
         super(jsonObject);
 
         if (jsonObject != null) {
             try {
                 setId(jsonObject.getString("id"));
                 setContainedVocabIDs(JSONUtil.getStringArrayFromJSONArray(jsonObject.optJSONArray("containedVocabIds")));
+                setDefinitions(jsonObject.getString("definitions"));
                 setLanguage(jsonObject.getString("lang"));
                 setRareKanji(jsonObject.getBoolean("rareKanji"));
-                setAudioFile(jsonObject.optString("audio"));
-                setToughness(jsonObject.getInt("toughness"));
-                setChanged(jsonObject.optLong("changed"));
-                setWriting(jsonObject.getString("writing"));
-                setToughnessString(jsonObject.getString("toughnessString"));
-                setDefinitions(jsonObject.getString("definitions"));
-                setStarred(jsonObject.getBoolean("starred"));
                 setReading(jsonObject.getString("reading"));
-                setSentenceID(jsonObject.getString("sentenceId"));
+                setStarred(jsonObject.getBoolean("starred"));
+                setToughness(jsonObject.getInt("toughness"));
+                setToughnessString(jsonObject.getString("toughnessString"));                
+                setWriting(jsonObject.getString("writing"));              
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -80,28 +74,12 @@ public class Vocab extends SkritterObject {
         isRareKanji = rareKanji;
     }
 
-    public String getAudioFile() {
-        return audioFile;
-    }
-
-    public void setAudioFile(String audioFile) {
-        this.audioFile = audioFile;
-    }
-
     public int getToughness() {
         return toughness;
     }
 
     public void setToughness(int toughness) {
         this.toughness = toughness;
-    }
-
-    public long getChanged() {
-        return changed;
-    }
-
-    public void setChanged(long changed) {
-        this.changed = changed;
     }
 
     public String getWriting() {
@@ -159,13 +137,5 @@ public class Vocab extends SkritterObject {
 
     public void setReading(String reading) {
         this.reading = reading;
-    }
-
-    public String getSentenceID() {
-        return sentenceID;
-    }
-
-    public void setSentenceID(String sentenceID) {
-        this.sentenceID = sentenceID;
     }
 }

@@ -2,12 +2,13 @@ package com.skritter;
 
 import android.net.http.AndroidHttpClient;
 import android.util.Base64;
-import android.util.Log;
 
 import com.skritter.models.LoginStatus;
+import com.skritter.models.Sentence;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
 import com.skritter.models.Vocab;
+import com.skritter.persistence.SentenceTable;
 import com.skritter.persistence.SkritterDatabaseHelper;
 import com.skritter.persistence.StrokeDataTable;
 import com.skritter.persistence.StudyItemTable;
@@ -22,7 +23,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -256,6 +256,7 @@ public class SkritterAPI {
         populateItems(db, response);
         populateVocab(db, response);
         populateStrokes(db, response);
+        populateSentences(db, response);
     }
 
     private static void populateItems(SkritterDatabaseHelper db, JSONObject response) {
@@ -330,6 +331,31 @@ public class SkritterAPI {
             }
 
             StrokeDataTable.getInstance().create(db, strokeData);
+        }
+    }
+    
+    private static void populateSentences(SkritterDatabaseHelper db, JSONObject response) {
+        // Populate sentences which were included in the study item response
+        JSONArray sentenceJSONArray = response.optJSONArray("Sentences");
+
+        if (sentenceJSONArray == null || sentenceJSONArray.length() == 0) {
+            return;
+        }
+
+        for (int i = 0; i < sentenceJSONArray.length(); i++) {
+            JSONObject sentenceJSONObject = sentenceJSONArray.optJSONObject(i);
+
+            if (sentenceJSONObject == null) {
+                continue;
+            }
+
+            Sentence sentence = new Sentence(sentenceJSONObject);
+
+            if (sentence == null) {
+                continue;
+            }
+
+            SentenceTable.getInstance().create(db, sentence);
         }
     }
 

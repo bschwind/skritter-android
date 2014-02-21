@@ -19,6 +19,7 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
     private static final String DEFINITIONS = "definitions";
     private static final String STARRED = "starred";
     private static final String READING = "reading";
+    private static final String SENTENCE_ID = "sentence_id";
 
     private static final VocabTable vocabTable = new VocabTable();
 
@@ -45,7 +46,8 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
                 new Column(false, TOUGHNESS_STRING, Column.TEXT_TYPE),
                 new Column(false, DEFINITIONS, Column.TEXT_TYPE),
                 new Column(false, STARRED, Column.TEXT_TYPE),
-                new Column(false, READING, Column.TEXT_TYPE)
+                new Column(false, READING, Column.TEXT_TYPE),
+                new Column(false, SENTENCE_ID, Column.TEXT_TYPE)
         };
     }
 
@@ -121,6 +123,7 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
         vocab.setDefinitions(cursor.getString(cursor.getColumnIndex(DEFINITIONS)));
         vocab.setStarred(cursor.getInt(cursor.getColumnIndex(STARRED)) == 1);
         vocab.setReading(cursor.getString(cursor.getColumnIndex(READING)));
+        vocab.setSentenceID(cursor.getString(cursor.getColumnIndex(SENTENCE_ID)));
 
         return vocab;
     }
@@ -141,6 +144,7 @@ public class VocabTable extends SkritterDatabaseTable<Vocab> {
         values.put(DEFINITIONS, vocab.getDefinitions());
         values.put(STARRED, vocab.isStarred());
         values.put(READING, vocab.getReading());
+        values.put(SENTENCE_ID, vocab.getSentenceID());
 
         return values;
     }
