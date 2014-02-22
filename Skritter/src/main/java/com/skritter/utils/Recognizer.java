@@ -92,7 +92,7 @@ public class Recognizer {
         Matrix matrix = new Matrix();
         // Move the bitmap so we can rotate and scale around the center of the image
         matrix.setTranslate(-param.bitmapWidth * 0.5f, -param.bitmapHeight * 0.5f);
-        matrix.postRotate(stroke.rotation);
+        matrix.postRotate(-stroke.rotation);
         matrix.postScale(scaleX, scaleY);
         // Move it back so we draw with the bitmap's upper left corner at (x, y)
         matrix.postTranslate(param.bitmapWidth * 0.5f * scaleX, param.bitmapHeight * 0.5f * scaleY);
