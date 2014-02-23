@@ -8,19 +8,22 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 
 import com.skritter.R;
 import com.skritter.SkritterApplication;
 import com.skritter.math.BoundingBox;
 import com.skritter.math.Vector2;
 import com.skritter.models.Param;
+import com.skritter.models.Sentence;
 import com.skritter.models.Stroke;
 import com.skritter.models.StrokeData;
 import com.skritter.models.StudyItem;
 import com.skritter.models.Vocab;
+import com.skritter.persistence.SentenceTable;
 import com.skritter.persistence.SkritterDatabaseHelper;
 import com.skritter.persistence.StrokeDataTable;
 import com.skritter.persistence.VocabTable;
@@ -29,6 +32,7 @@ import com.skritter.utils.Recognizer;
 import com.skritter.utils.ShortStraw;
 import com.skritter.utils.StringUtil;
 import com.skritter.utils.StrokeTree;
+import com.skritter.views.ItemDetailsView;
 import com.skritter.views.PromptCanvas;
 
 import java.util.Collections;
@@ -37,7 +41,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class StudyActivity extends FragmentActivity implements GetStudyItemsTaskFragment.TaskCallbacks {
+public class StudyActivity extends FragmentActivity implements GetStudyItemsTaskFragment.TaskCallbacks, View.OnTouchListener {
     private PromptCanvas promptCanvas;
     private ProgressDialog progressDialog;
     private List<StudyItem> itemsToStudy;
@@ -68,6 +72,8 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         loadSavedState(savedInstanceState);
 
         reattachFragments();
+        
+        findViewById(R.id.itemDetails).setOnTouchListener(this);
     }
     
     private void wireEventListeners() {
@@ -304,11 +310,9 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
             currentVocab = VocabTable.getInstance().getByStringID(db, vocabIDs[0]);
         }
 
-        TextView text = (TextView) findViewById(R.id.itemDetails);
-        text.setText(currentItem.getId());
-
-        TextView timeText = (TextView) findViewById(R.id.itemTimes);
-        timeText.setText("" + currentItem.getReviews());
+        Sentence sentence = SentenceTable.getInstance().getByStringID(db, currentVocab.getSentenceID());
+        ((ItemDetailsView)findViewById(R.id.itemDetails)).sentence = sentence != null ? sentence.getWriting() : "";
+        findViewById(R.id.itemDetails).invalidate();
         
         StrokeData currentStrokeData = null;
 
@@ -342,8 +346,6 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
     }
 
     private void updateText() {
-        TextView writingLabel = (TextView) findViewById(R.id.itemDetails);
-        TextView definitionLabel = (TextView) findViewById(R.id.itemTimes);
         if (currentItem.isRune()) {
             String kanjiOnly = StringUtil.filterOutNonKanji(currentVocab.getWriting());
             String modifiedWriting = currentVocab.getWriting();
@@ -361,13 +363,15 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
                     modifiedWriting = modifiedWriting.replaceFirst(charToReplace, " _ ");
                 }
             }
-            
-            writingLabel.setText(modifiedWriting);
-            definitionLabel.setText(currentVocab.getDefinitionByLanguage("en"));
+
+            ((ItemDetailsView)findViewById(R.id.itemDetails)).itemWriting = modifiedWriting;
+            ((ItemDetailsView)findViewById(R.id.itemDetails)).definition = currentVocab.getDefinitionByLanguage("en");
         } else {
-            writingLabel.setText("");
-            definitionLabel.setText("");
+            ((ItemDetailsView)findViewById(R.id.itemDetails)).itemWriting = "";
+            ((ItemDetailsView)findViewById(R.id.itemDetails)).definition = "";
         }
+
+        findViewById(R.id.itemDetails).invalidate();
     }
 
     @Override
@@ -415,6 +419,51 @@ public class StudyActivity extends FragmentActivity implements GetStudyItemsTask
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
+    }
+    
+    private float yDelta;
+
+    public boolean onTouch(View view, MotionEvent event) {
+        // This will need to be modified later to take landscape orientations into account
+        int heightOfParents = 0;
+        heightOfParents += findViewById(R.id.canvas).getHeight();
+        heightOfParents += findViewById(R.id.buttonRow).getHeight();
+              
+        final float Y = event.getRawY();
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                RelativeLayout.LayoutParams lParams = (RelativeLayout.LayoutParams)view.getLayoutParams();
+                yDelta = Y - lParams.topMargin;
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                break;
+            case MotionEvent.ACTION_MOVE:
+                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)view.getLayoutParams();
+                layoutParams.topMargin = (int)(Y - yDelta);
+                
+                if (layoutParams.topMargin > 0) {
+                    layoutParams.topMargin = 0;
+                } else if (layoutParams.topMargin < -heightOfParents) {
+                    layoutParams.topMargin = -heightOfParents;
+                }
+                
+                ((ItemDetailsView)view).interpolation = (float)layoutParams.topMargin / (-heightOfParents);
+                
+                layoutParams.rightMargin = 0;
+                layoutParams.leftMargin = 0;
+                layoutParams.bottomMargin = 0;
+                
+                view.setLayoutParams(layoutParams);
+                break;
+        }
+        
+        View _root = findViewById(R.id.RelativeLayout);
+        _root.invalidate();
+        return true;
     }
 
 }

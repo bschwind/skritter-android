@@ -1,10 +1,9 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/LinearLayout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".StudyActivity"
-    android:orientation="vertical">
+    android:id="@+id/RelativeLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context=".StudyActivity">
 
     <com.skritter.views.PromptCanvas
         android:id="@+id/canvas"
@@ -18,7 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:context=".StudyActivity"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_below="@id/canvas">
 
         <ImageButton android:id="@+id/leftButton"
             android:layout_width="0dp"
@@ -56,26 +56,12 @@
             android:onClick="onNext"
             android:src="@drawable/next"/>
         </LinearLayout>
-
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/debugRow"
-        android:layout_width="match_parent"
+    
+    <com.skritter.views.ItemDetailsView
+        android:id="@+id/itemDetails"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        tools:context=".StudyActivity"
-        android:orientation="vertical">
+        android:layout_below="@id/buttonRow"
+        android:layout_marginTop="0px"/>
 
-        <TextView android:id="@+id/itemDetails"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textSize="30sp"/>
-
-        <TextView android:id="@+id/itemTimes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textSize="30sp"/>
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>
