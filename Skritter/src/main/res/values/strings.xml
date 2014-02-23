@@ -22,5 +22,9 @@
     <string name="hideReadingSummary">Hides the reading of the word for definition, rune, and tone prompts</string>
     <string name="hideDefinition">Hide Definition</string>
     <string name="hideDefinitionSummary">Hides the definition of the word for reading, rune, and tone prompts</string>
+    <string name="showUserCorners">Show User Corners</string>
+    <string name="showUserCornersSummary">Draws the corners calculated from the user\'s stroke</string>
+    <string name="showParamCorners">Show Param Corners</string>
+    <string name="showParamCornersSummary">Draws the defined corners for each stroke in the character</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.skritter.views;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -10,7 +11,9 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
+import android.preference.PreferenceManager;
 
+import com.skritter.SkritterApplication;
 import com.skritter.models.Param;
 import com.skritter.models.Stroke;
 import com.skritter.math.Vector2;
@@ -61,6 +64,9 @@ public class RuneItemPanel extends StudyItemPanel {
     // Keep track of the last point the user has drawn so we can use smooth quad curves
     private PointF lastPoint = new PointF(-1.0f, -1.0f);
 
+    private boolean drawUserCorners;
+    private boolean drawParamCorners;
+
     public RuneItemPanel() {
         super();
 
@@ -81,6 +87,10 @@ public class RuneItemPanel extends StudyItemPanel {
     public void loadAssets(Context context) {
         super.loadAssets(context);
         loadStrokeBitmaps(context);
+
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+        drawUserCorners = settings.getBoolean(SkritterApplication.PreferenceKeys.SHOW_USER_CORNERS, false);
+        drawParamCorners = settings.getBoolean(SkritterApplication.PreferenceKeys.SHOW_PARAM_CORNERS, false);
     }
 
     private void loadStrokeBitmaps(Context context) {
@@ -238,23 +248,27 @@ public class RuneItemPanel extends StudyItemPanel {
 
             canvas.drawBitmap(strokeBitmap, matrix, null);
 
-//            for (int j = 0; j < Param.params.length; j++) {
-//                if (Param.params[j].bitmapID == strokeRenderDataMap[i].bitmapID) {
-//                    for (int k = 0; k < Param.params[j].corners.length; k++) {
-//                        float[] points = new float[]{Param.params[j].corners[k].x, Param.params[j].corners[k].y};
-//                        matrix.mapPoints(points);
-//
-//                        canvas.drawCircle(points[0], points[1], 10f, cornerPaint);
-//                    }
-//                }
-//            }
+            if (drawParamCorners) {
+                for (int j = 0; j < Param.params.length; j++) {
+                    if (Param.params[j].bitmapID == renderData.bitmapID) {
+                        for (int k = 0; k < Param.params[j].corners.length; k++) {
+                            float[] points = new float[]{Param.params[j].corners[k].x, Param.params[j].corners[k].y};
+                            matrix.mapPoints(points);
+
+                            canvas.drawCircle(points[0], points[1], 10f, cornerPaint);
+                        }
+                    }
+                }
+            }
         }
 
-//        for (Vector2 corner : corners) {
-//            if (corner != null) {
-//                canvas.drawCircle(corner.x, corner.y, 10f, cornerPaint);
-//            }
-//        }
+        if (drawUserCorners) {
+            for (Vector2 corner : corners) {
+                if (corner != null) {
+                    canvas.drawCircle(corner.x, corner.y, 10f, cornerPaint);
+                }
+            }
+        }
     }
 
     private void drawRuneBackground(Canvas canvas) {

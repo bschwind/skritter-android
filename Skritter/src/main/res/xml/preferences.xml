@@ -10,4 +10,15 @@
         android:title="@string/hideDefinition"
         android:summary="@string/hideDefinitionSummary"
         android:defaultValue="false"/>
+    <CheckBoxPreference
+        android:key="showUserCornersPreferenceKey"
+        android:title="@string/showUserCorners"
+        android:summary="@string/showUserCornersSummary"
+        android:defaultValue="false"/>
+    <CheckBoxPreference
+        android:key="showParamCornersPreferenceKey"
+        android:title="@string/showParamCorners"
+        android:summary="@string/showParamCornersSummary"
+        android:defaultValue="false"/>
 </PreferenceScreen>
+    

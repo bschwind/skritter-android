@@ -12,6 +12,8 @@ public class SkritterApplication extends Application {
         public static final String ACCESS_TOKEN = "accessToken";
         public static final String HIDE_READING = "hideReadingPreferenceKey";
         public static final String HIDE_DEFINITION = "hideDefinitionPreferenceKey";
+        public static final String SHOW_USER_CORNERS = "showUserCornersPreferenceKey";
+        public static final String SHOW_PARAM_CORNERS = "showParamCornersPreferenceKey";
     }
 
 }
