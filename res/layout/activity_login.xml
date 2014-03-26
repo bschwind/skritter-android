@@ -21,6 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:hint="@string/username"
+        android:text="mcfarljwtest3"
         android:layout_below="@+id/skritterLabel"/>
 
     <EditText android:id="@+id/password"
@@ -28,6 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:hint="@string/password"
+        android:text="skrit123"
         android:layout_below="@+id/username"/>
 
     <Button android:id="@+id/loginButton"

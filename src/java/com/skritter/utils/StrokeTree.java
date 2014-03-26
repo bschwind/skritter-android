@@ -175,6 +175,15 @@ public class StrokeTree {
         return strokeNodesList;
     }
     
+    public StrokeNode getNextStroke() {
+        List<StrokeNode> nodes = getStrokeNodesToTest(0);
+        if (!nodes.isEmpty()) {
+            return nodes.get(0);
+        } else {
+            return null;
+        }
+    }
+    
     public List<StrokeNode> getStrokeNodesToTest(int strokeOrderWindow) {
         List<StrokeNode> nodes = new ArrayList<StrokeNode>();
         int currentStrokeRank = getCurrentStrokeRank();
